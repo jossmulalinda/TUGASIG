@@ -16,6 +16,7 @@ import {
   BarChart2,
   Database,
   Info,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -248,7 +249,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieCha
 import { KELURAHAN_DATA } from "@/components/distribution-map";
 
 function DistributionBarChart({ selectedBantuan }: { selectedBantuan: string }) {
-  const filteredData = selectedBantuan === "Semua Jenis"
+  const filteredData = selectedBantuan === ":Semua Jenis"
     ? KELURAHAN_DATA
     : KELURAHAN_DATA.filter((k) => k.jenisBantuan === selectedBantuan);
   

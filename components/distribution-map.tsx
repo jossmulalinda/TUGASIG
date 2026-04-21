@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import type L from "leaflet";
 
 interface KelurahanData {
   id: string;
@@ -58,16 +59,23 @@ export default function DistributionMap({ selectedBantuan, selectedTahun, onKelu
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<unknown>(null);
   const markersRef = useRef<Map<string, unknown>>(new Map());
-  const leafletRef = useRef<typeof import("leaflet") | null>(null);
+  // const leafletRef = useRef<typeof import("leaflet") | null>(null);
+  const leafletRef = useRef<typeof L | null>(null);
 
+  const isInitializingRef = useRef(false);
   // Initialize map once
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
+    isInitializingRef.current = true;
+
     const initMap = async () => {
-      const L = (await import("leaflet")).default;
-      leafletRef.current = L as unknown as typeof import("leaflet");
+      const leafletModule = await import("leaflet");
+      const L = leafletModule.default;  // Aman sekarang
+      leafletRef.current = L;
       await import("leaflet/dist/leaflet.css");
+
+      if (mapInstanceRef.current) return;
 
       const map = L.map(mapRef.current!, {
         center: [0.7960, 127.3700],
