@@ -245,7 +245,7 @@ function DistributionBarChart({ selectedBantuan }: { selectedBantuan: string }) 
     if (selectedBantuan !== "Semua Jenis") params.append("jenis", selectedBantuan);
     params.append("tahun", "2026");
 
-    fetch(`http://localhost:8080/api/bansos?${params.toString()}`)
+fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bansos?${params.toString()}`)
       .then(res => res.json())
       .then(bansos => {
         const map: Record<string, number> = {};
@@ -291,7 +291,7 @@ function KecamatanDonut({ selectedBantuan }: { selectedBantuan: string }) {
     if (selectedBantuan !== "Semua Jenis") params.append("jenis", selectedBantuan);
     params.append("tahun", "2026");
 
-    fetch(`http://localhost:8080/api/bansos?${params.toString()}`)
+fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bansos?${params.toString()}`)
       .then(res => res.json())
       .then(bansos => {
         const map: Record<string, number> = {};
