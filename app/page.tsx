@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Sidebar from "@/components/sidebar";
 import MapLegend from "@/components/map-legend";
@@ -8,6 +8,7 @@ import KelurahanPopup from "@/components/kelurahan-popup";
 import StatsCards from "@/components/stats-cards";
 import DataTable from "@/components/data-table";
 import type { KelurahanData } from "@/components/distribution-map";
+import ComingSoon from "@/components/ui/CommingSoon";
 import {
   RefreshCw,
   Layers,
@@ -16,7 +17,6 @@ import {
   BarChart2,
   Database,
   Info,
-  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -56,9 +56,10 @@ export default function BansosPage() {
   const [selectedTahun, setSelectedTahun] = useState("2026");
   const [selectedKelurahan, setSelectedKelurahan] = useState<KelurahanData | null>(null);
 
+  const isTahunTersedia = selectedTahun === "2026";
+
   return (
     <div className="flex h-[100dvh] w-screen overflow-hidden bg-background">
-      {/* Desktop sidebar */}
       <Sidebar
         activeNav={activeNav}
         onNavChange={(id) => setActiveNav(id as View)}
@@ -68,16 +69,10 @@ export default function BansosPage() {
         onTahunChange={setSelectedTahun}
       />
 
-      {/* Main content */}
       <main className="flex-1 flex flex-col overflow-hidden min-w-0">
-        {/* Top bar */}
         <header className="shrink-0 flex items-center justify-between px-4 py-2.5 bg-card border-b border-border shadow-sm gap-3">
           <div className="flex items-center gap-2 min-w-0">
-            <img
-              src="/dinsoss-logo.png"
-              alt="Dinsoss Logo"
-              className="w-8 h-8 shrink-0"
-            />
+            <img src="/dinsoss-logo.png" alt="Dinsoss Logo" className="w-8 h-8 shrink-0" />
             <div className="min-w-0">
               <h1 className="text-sm font-bold text-foreground truncate">
                 {VIEW_TITLES[activeNav]}
@@ -96,71 +91,68 @@ export default function BansosPage() {
           </div>
         </header>
 
-        {/* Content area */}
         <div className="flex-1 overflow-auto pb-16 lg:pb-0">
 
           {/* Map View */}
           {activeNav === "peta" && (
-            <div className="relative h-full w-full min-h-[400px]">
-              <DistributionMap
-                selectedBantuan={selectedBantuan}
-                selectedTahun={selectedTahun}
-                onKelurahanSelect={setSelectedKelurahan}
-              />
-
-              {/* Legend */}
-              <div className="absolute bottom-4 left-4 z-[999]">
-                <MapLegend />
-              </div>
-
-              {/* Filter info chip */}
-              <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[999]">
-                <div className="bg-card/95 backdrop-blur-sm border border-border rounded-full px-3 py-1 shadow-md text-[11px] font-medium text-foreground flex items-center gap-1.5 whitespace-nowrap">
-                  <span className="text-muted-foreground">Filter:</span>
-                  <span>{selectedBantuan}</span>
-                  <span className="text-border">|</span>
-                  <span>{selectedTahun}</span>
+            isTahunTersedia ? (
+              <div className="relative h-full w-full min-h-[400px]">
+                <DistributionMap
+                  selectedBantuan={selectedBantuan}
+                  selectedTahun={selectedTahun}
+                  onKelurahanSelect={setSelectedKelurahan}
+                />
+                <div className="absolute bottom-4 left-4 z-[999]">
+                  <MapLegend selectedBantuan={selectedBantuan} />
                 </div>
+                <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[999]">
+                  <div className="bg-card/95 backdrop-blur-sm border border-border rounded-full px-3 py-1 shadow-md text-[11px] font-medium text-foreground flex items-center gap-1.5 whitespace-nowrap">
+                    <span className="text-muted-foreground">Filter:</span>
+                    <span>{selectedBantuan}</span>
+                    <span className="text-border">|</span>
+                    <span>{selectedTahun}</span>
+                  </div>
+                </div>
+                {selectedKelurahan && (
+                  <>
+                    <div className="hidden sm:block absolute top-4 right-4 z-[999]">
+                      <KelurahanPopup data={selectedKelurahan} onClose={() => setSelectedKelurahan(null)} />
+                    </div>
+                    <div className="sm:hidden absolute bottom-0 left-0 right-0 z-[999] p-3 pb-20">
+                      <KelurahanPopup data={selectedKelurahan} onClose={() => setSelectedKelurahan(null)} />
+                    </div>
+                  </>
+                )}
               </div>
-
-              {/* Kelurahan popup — bottom sheet on mobile, top-right on desktop */}
-              {selectedKelurahan && (
-                <>
-                  {/* Desktop */}
-                  <div className="hidden sm:block absolute top-4 right-4 z-[999]">
-                    <KelurahanPopup
-                      data={selectedKelurahan}
-                      onClose={() => setSelectedKelurahan(null)}
-                    />
-                  </div>
-                  {/* Mobile bottom sheet */}
-                  <div className="sm:hidden absolute bottom-0 left-0 right-0 z-[999] p-3 pb-20">
-                    <KelurahanPopup
-                      data={selectedKelurahan}
-                      onClose={() => setSelectedKelurahan(null)}
-                    />
-                  </div>
-                </>
-              )}
-            </div>
+            ) : (
+              <ComingSoon label={`Data Tahun ${selectedTahun}`} onBack={() => setSelectedTahun("2026")} />
+            )
           )}
 
           {/* Dashboard View */}
           {activeNav === "dashboard" && (
-            <div className="p-4 md:p-5 space-y-4">
-              <StatsCards selectedBantuan={selectedBantuan} />
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <DistributionBarChart selectedBantuan={selectedBantuan} />
-                <KecamatanDonut selectedBantuan={selectedBantuan} />
+            isTahunTersedia ? (
+              <div className="p-4 md:p-5 space-y-4">
+                <StatsCards selectedBantuan={selectedBantuan} />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <DistributionBarChart selectedBantuan={selectedBantuan} />
+                  <KecamatanDonut selectedBantuan={selectedBantuan} />
+                </div>
               </div>
-            </div>
+            ) : (
+              <ComingSoon label={`Data Tahun ${selectedTahun}`} onBack={() => setSelectedTahun("2026")} />
+            )
           )}
 
           {/* Data View */}
           {activeNav === "data" && (
-            <div className="p-3 md:p-5">
-              <DataTable selectedBantuan={selectedBantuan} />
-            </div>
+            isTahunTersedia ? (
+              <div className="p-3 md:p-5">
+                <DataTable selectedBantuan={selectedBantuan} />
+              </div>
+            ) : (
+              <ComingSoon label={`Data Tahun ${selectedTahun}`} onBack={() => setSelectedTahun("2026")} />
+            )
           )}
 
           {/* Home View */}
@@ -205,7 +197,7 @@ export default function BansosPage() {
                 <h3 className="font-semibold text-sm text-foreground">Informasi Sistem</h3>
                 {[
                   ["Versi", "1.0.0"],
-                  ["Dikembangkan oleh", "Mahasiswa Informatika Univ. Khairun (TSI, WLD, JGOM)"],
+                  ["Dikembangkan oleh", "Mahasiswa Informatika Univ. Khairun (TSI, WLD, JGOM, PHARAI)"],
                   ["Data sumber", "Dinas Sosial Kota Ternate"],
                   ["Pembaruan terakhir", "April 2026"],
                 ].map(([k, v]) => (
@@ -228,9 +220,7 @@ export default function BansosPage() {
                 onClick={() => setActiveNav(id as View)}
                 className={cn(
                   "flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
-                  activeNav === id
-                    ? "text-primary"
-                    : "text-muted-foreground"
+                  activeNav === id ? "text-primary" : "text-muted-foreground"
                 )}
               >
                 <Icon className={cn("w-5 h-5", activeNav === id ? "text-primary" : "text-muted-foreground")} />
@@ -246,21 +236,33 @@ export default function BansosPage() {
 
 // Inline chart components for dashboard
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from "recharts";
-import { KELURAHAN_DATA } from "@/components/distribution-map";
 
 function DistributionBarChart({ selectedBantuan }: { selectedBantuan: string }) {
-  const filteredData = selectedBantuan === ":Semua Jenis"
-    ? KELURAHAN_DATA
-    : KELURAHAN_DATA.filter((k) => k.jenisBantuan === selectedBantuan);
-  
-  const data = [...filteredData]
-    .sort((a, b) => b.penerima - a.penerima)
-    .slice(0, 8)
-    .map((k) => ({ name: k.name, penerima: k.penerima }));
+  const [data, setData] = useState<{name: string, penerima: number}[]>([]);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (selectedBantuan !== "Semua Jenis") params.append("jenis", selectedBantuan);
+    params.append("tahun", "2026");
+
+    fetch(`http://localhost:8080/api/bansos?${params.toString()}`)
+      .then(res => res.json())
+      .then(bansos => {
+        const map: Record<string, number> = {};
+        bansos.forEach((d: {kecamatan: string, jumlah_kpm: number}) => {
+          map[d.kecamatan] = (map[d.kecamatan] || 0) + d.jumlah_kpm;
+        });
+        const sorted = Object.entries(map)
+          .map(([name, penerima]) => ({ name, penerima }))
+          .sort((a, b) => b.penerima - a.penerima)
+          .slice(0, 8);
+        setData(sorted);
+      });
+  }, [selectedBantuan]);
 
   return (
     <div className="bg-card rounded-xl border border-border p-4 shadow-sm">
-      <h3 className="font-semibold text-sm text-foreground mb-4">Top 8 Kelurahan Penerima</h3>
+      <h3 className="font-semibold text-sm text-foreground mb-4">Top 8 Kecamatan Penerima</h3>
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={data} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
           <XAxis dataKey="name" tick={{ fontSize: 9 }} angle={-25} textAnchor="end" height={50} />
@@ -281,31 +283,31 @@ function DistributionBarChart({ selectedBantuan }: { selectedBantuan: string }) 
 }
 
 function KecamatanDonut({ selectedBantuan }: { selectedBantuan: string }) {
-  const filteredData = selectedBantuan === "Semua Jenis"
-    ? KELURAHAN_DATA
-    : KELURAHAN_DATA.filter((k) => k.jenisBantuan === selectedBantuan);
+  const [data, setData] = useState<{name: string, value: number}[]>([]);
+  const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ef4444", "#ec4899", "#14b8a6", "#f97316"];
 
-  const kecamatanMap: Record<string, number> = {};
-  filteredData.forEach((k) => {
-    kecamatanMap[k.kecamatan] = (kecamatanMap[k.kecamatan] || 0) + k.penerima;
-  });
-  const data = Object.entries(kecamatanMap).map(([name, value]) => ({ name, value }));
-  const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6"];
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (selectedBantuan !== "Semua Jenis") params.append("jenis", selectedBantuan);
+    params.append("tahun", "2026");
+
+    fetch(`http://localhost:8080/api/bansos?${params.toString()}`)
+      .then(res => res.json())
+      .then(bansos => {
+        const map: Record<string, number> = {};
+        bansos.forEach((d: {kecamatan: string, jumlah_kpm: number}) => {
+          map[d.kecamatan] = (map[d.kecamatan] || 0) + d.jumlah_kpm;
+        });
+        setData(Object.entries(map).map(([name, value]) => ({ name, value })));
+      });
+  }, [selectedBantuan]);
 
   return (
     <div className="bg-card rounded-xl border border-border p-4 shadow-sm">
       <h3 className="font-semibold text-sm text-foreground mb-4">Distribusi per Kecamatan</h3>
       <ResponsiveContainer width="100%" height={220}>
         <PieChart>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            innerRadius={55}
-            outerRadius={85}
-            paddingAngle={3}
-            dataKey="value"
-          >
+          <Pie data={data} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value">
             {data.map((_, i) => (
               <Cell key={i} fill={COLORS[i % COLORS.length]} />
             ))}
