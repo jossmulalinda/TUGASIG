@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type L from "leaflet";
 
 interface KelurahanData {
@@ -9,45 +9,71 @@ interface KelurahanData {
   kecamatan: string;
   penerima: number;
   total: number;
-  level: "very-high" | "high" | "medium" | "low" | "very-low";
+  level: "very-high" | "high" | "medium" | "low";
   lat: number;
   lng: number;
   jenisBantuan: string;
 }
 
-const KELURAHAN_DATA: KelurahanData[] = [
-  { id: "1", name: "Gamalama", kecamatan: "Ternate Tengah", penerima: 1240, total: 3200, level: "very-high", lat: 0.7950, lng: 127.3741, jenisBantuan: "PKH" },
-  { id: "2", name: "Soa Sio", kecamatan: "Ternate Utara", penerima: 980, total: 2800, level: "high", lat: 0.8120, lng: 127.3760, jenisBantuan: "BPNT" },
-  { id: "3", name: "Kalumata", kecamatan: "Ternate Selatan", penerima: 750, total: 2100, level: "high", lat: 0.7780, lng: 127.3680, jenisBantuan: "PKH" },
-  { id: "4", name: "Moya", kecamatan: "Ternate Tengah", penerima: 420, total: 1500, level: "medium", lat: 0.7890, lng: 127.3820, jenisBantuan: "BST" },
-  { id: "5", name: "Bastiong Talangame", kecamatan: "Ternate Selatan", penerima: 680, total: 1900, level: "high", lat: 0.7710, lng: 127.3720, jenisBantuan: "BPNT" },
-  { id: "6", name: "Marikrubu", kecamatan: "Ternate Tengah", penerima: 310, total: 1100, level: "medium", lat: 0.7970, lng: 127.3700, jenisBantuan: "BLT Dana Desa" },
-  { id: "7", name: "Tobololo", kecamatan: "Ternate Utara", penerima: 190, total: 900, level: "low", lat: 0.8250, lng: 127.3800, jenisBantuan: "Bansos Tunai" },
-  { id: "8", name: "Ngade", kecamatan: "Ternate Selatan", penerima: 280, total: 1050, level: "medium", lat: 0.7650, lng: 127.3750, jenisBantuan: "PKH" },
-  { id: "9", name: "Jati", kecamatan: "Ternate Tengah", penerima: 540, total: 1600, level: "medium", lat: 0.8010, lng: 127.3660, jenisBantuan: "BPNT" },
-  { id: "10", name: "Gambesi", kecamatan: "Ternate Selatan", penerima: 120, total: 600, level: "very-low", lat: 0.7580, lng: 127.3700, jenisBantuan: "BST" },
-  { id: "11", name: "Sangadji", kecamatan: "Ternate Utara", penerima: 870, total: 2400, level: "high", lat: 0.8190, lng: 127.3730, jenisBantuan: "PKH" },
-  { id: "12", name: "Kulaba", kecamatan: "Ternate Utara", penerima: 150, total: 700, level: "very-low", lat: 0.8340, lng: 127.3820, jenisBantuan: "BLT Dana Desa" },
-  { id: "13", name: "Sulamadaha", kecamatan: "Pulau Ternate", penerima: 220, total: 950, level: "low", lat: 0.7900, lng: 127.3540, jenisBantuan: "Bansos Tunai" },
-  { id: "14", name: "Kastela", kecamatan: "Pulau Ternate", penerima: 170, total: 800, level: "low", lat: 0.7840, lng: 127.3480, jenisBantuan: "BST" },
-  { id: "15", name: "Foramadiahi", kecamatan: "Pulau Ternate", penerima: 95, total: 550, level: "very-low", lat: 0.8060, lng: 127.3500, jenisBantuan: "BPNT" },
-];
+interface BansosData {
+  id: number;
+  kecamatan: string;
+  jenis_bantuan: string;
+  jumlah_kpm: number;
+  tahun: number;
+}
 
-const LEVEL_COLORS: Record<KelurahanData["level"], string> = {
-  "very-high": "#d4460e",
-  "high": "#e87d2c",
-  "medium": "#d4b31a",
-  "low": "#4caf7b",
-  "very-low": "#2faebb",
-};
+const API_URL = "http://localhost:8080";
 
-const LEVEL_RADIUS: Record<KelurahanData["level"], number> = {
-  "very-high": 26,
-  "high": 22,
-  "medium": 18,
-  "low": 14,
-  "very-low": 10,
-};
+function getColor(jumlahKpm: number, jenisBantuan: string): string {
+  if (jenisBantuan === "PBI JK") {
+    if (jumlahKpm > 6000) return "#d4460e";
+    if (jumlahKpm > 2500) return "#e87d2c";
+    if (jumlahKpm > 1800) return "#4caf7b";
+    return "#2faebb";
+  }
+  if (jenisBantuan === "PKH") {
+    if (jumlahKpm > 400) return "#d4460e";
+    if (jumlahKpm > 281) return "#e87d2c";
+    if (jumlahKpm > 226) return "#4caf7b";
+    return "#2faebb";
+  }
+  if (jenisBantuan === "Sembako/BPNT") {
+    if (jumlahKpm > 550) return "#d4460e";
+    if (jumlahKpm > 401) return "#e87d2c";
+    if (jumlahKpm > 351) return "#4caf7b";
+    return "#2faebb";
+  }
+  if (jumlahKpm > 6000) return "#d4460e";
+  if (jumlahKpm > 3000) return "#e87d2c";
+  if (jumlahKpm > 1000) return "#4caf7b";
+  return "#2faebb";
+}
+
+function getLevel(jumlahKpm: number, jenisBantuan: string): KelurahanData["level"] {
+  if (jenisBantuan === "PBI JK") {
+    if (jumlahKpm > 6000) return "very-high";
+    if (jumlahKpm > 2500) return "high";
+    if (jumlahKpm > 1800) return "medium";
+    return "low";
+  }
+  if (jenisBantuan === "PKH") {
+    if (jumlahKpm > 400) return "very-high";
+    if (jumlahKpm > 281) return "high";
+    if (jumlahKpm > 226) return "medium";
+    return "low";
+  }
+  if (jenisBantuan === "Sembako/BPNT") {
+    if (jumlahKpm > 550) return "very-high";
+    if (jumlahKpm > 401) return "high";
+    if (jumlahKpm > 351) return "medium";
+    return "low";
+  }
+  if (jumlahKpm > 6000) return "very-high";
+  if (jumlahKpm > 3000) return "high";
+  if (jumlahKpm > 1000) return "medium";
+  return "low";
+}
 
 interface Props {
   selectedBantuan: string;
@@ -58,20 +84,29 @@ interface Props {
 export default function DistributionMap({ selectedBantuan, selectedTahun, onKelurahanSelect }: Props) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<unknown>(null);
-  const markersRef = useRef<Map<string, unknown>>(new Map());
-  // const leafletRef = useRef<typeof import("leaflet") | null>(null);
+  const layersRef = useRef<unknown[]>([]);
   const leafletRef = useRef<typeof L | null>(null);
+  const [bansosData, setBansosData] = useState<BansosData[]>([]);
+  const selectedKecamatanRef = useRef<string | null>(null);
+  const selectedBantuanRef = useRef<string>(selectedBantuan);
 
-  const isInitializingRef = useRef(false);
-  // Initialize map once
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (selectedBantuan !== "Semua Jenis") params.append("jenis", selectedBantuan);
+    if (selectedTahun) params.append("tahun", selectedTahun);
+
+    fetch(`${API_URL}/api/bansos?${params.toString()}`)
+      .then((res) => res.json())
+      .then((data) => setBansosData(data))
+      .catch((err) => console.error("Error fetching bansos:", err));
+  }, [selectedBantuan, selectedTahun]);
+
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    isInitializingRef.current = true;
-
     const initMap = async () => {
       const leafletModule = await import("leaflet");
-      const L = leafletModule.default;  // Aman sekarang
+      const L = leafletModule.default;
       leafletRef.current = L;
       await import("leaflet/dist/leaflet.css");
 
@@ -79,7 +114,7 @@ export default function DistributionMap({ selectedBantuan, selectedTahun, onKelu
 
       const map = L.map(mapRef.current!, {
         center: [0.7960, 127.3700],
-        zoom: 13,
+        zoom: 11,
         zoomControl: false,
       });
 
@@ -87,7 +122,7 @@ export default function DistributionMap({ selectedBantuan, selectedTahun, onKelu
       L.control.scale({ position: "bottomleft", metric: true, imperial: false }).addTo(map);
 
       L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
         subdomains: "abcd",
         maxZoom: 20,
       }).addTo(map);
@@ -101,53 +136,91 @@ export default function DistributionMap({ selectedBantuan, selectedTahun, onKelu
       if (mapInstanceRef.current) {
         (mapInstanceRef.current as { remove: () => void }).remove();
         mapInstanceRef.current = null;
-        markersRef.current.clear();
       }
     };
   }, []);
 
-  // Update markers when filter changes
   useEffect(() => {
-    const map = mapInstanceRef.current as { removeLayer: (l: unknown) => void; addLayer?: (l: unknown) => void } | null;
-    const L = leafletRef.current as unknown as typeof import("leaflet").default | null;
-    if (!map || !L) return;
+    const map = mapInstanceRef.current as L.Map | null;
+    selectedBantuanRef.current = selectedBantuan;
+    const L = leafletRef.current;
+    if (!map || !L || bansosData.length === 0) return;
 
-    // Remove existing markers
-    markersRef.current.forEach((marker) => {
-      map.removeLayer(marker);
+    layersRef.current.forEach((layer) => {
+      (map as unknown as { removeLayer: (l: unknown) => void }).removeLayer(layer);
     });
-    markersRef.current.clear();
+    layersRef.current = [];
 
-    // Filter data
-    const filteredData = selectedBantuan === "Semua Jenis"
-      ? KELURAHAN_DATA
-      : KELURAHAN_DATA.filter((k) => k.jenisBantuan === selectedBantuan);
+    fetch("/kecamatan_ternate.geojson")
+      .then((res) => res.json())
+      .then((geojson) => {
+        const kpmMap: Record<string, number> = {};
+        bansosData.forEach((d) => {
+          if (selectedBantuan === "Semua Jenis" || d.jenis_bantuan === selectedBantuan) {
+            kpmMap[d.kecamatan] = (kpmMap[d.kecamatan] || 0) + d.jumlah_kpm;
+          }
+        });
 
-    // Add filtered markers
-    filteredData.forEach((k) => {
-      const color = LEVEL_COLORS[k.level];
-      const radius = LEVEL_RADIUS[k.level];
+        const layer = L.geoJSON(geojson, {
+          style: (feature) => {
+            const nama = feature?.properties?.NAME_3 || "";
+            const kpm = kpmMap[nama] || 0;
+            return {
+              fillColor: getColor(kpm, selectedBantuan),
+              fillOpacity: 0.7,
+              color: "#fff",
+              weight: 2,
+            };
+          },
+          onEachFeature: (feature, layer) => {
+            const nama = feature?.properties?.NAME_3 || "";
+            const kpm = kpmMap[nama] || 0;
 
-      const marker = L.circleMarker([k.lat, k.lng], {
-        radius,
-        fillColor: color,
-        color: "#fff",
-        weight: 2,
-        opacity: 1,
-        fillOpacity: 0.82,
-      }).addTo(map as unknown as import("leaflet").Map);
+            layer.on("click", () => {
+              selectedKecamatanRef.current = nama;
+              onKelurahanSelect({
+                id: nama,
+                name: nama,
+                kecamatan: nama,
+                penerima: kpm,
+                total: kpm,
+                level: getLevel(kpm, selectedBantuanRef.current),
+                lat: 0,
+                lng: 0,
+                jenisBantuan: selectedBantuanRef.current,
+              });
+            });
 
-      marker.on("click", () => onKelurahanSelect(k));
-      marker.on("mouseover", function (this: typeof marker) {
-        (this as unknown as { setStyle: (s: object) => void }).setStyle({ weight: 3, fillOpacity: 1 });
-      });
-      marker.on("mouseout", function (this: typeof marker) {
-        (this as unknown as { setStyle: (s: object) => void }).setStyle({ weight: 2, fillOpacity: 0.82 });
-      });
+            layer.on("mouseover", function (this: L.Layer) {
+              (this as L.Path).setStyle({ fillOpacity: 1, weight: 3 });
+            });
 
-      markersRef.current.set(k.id, marker);
-    });
-  }, [selectedBantuan, onKelurahanSelect]);
+            layer.on("mouseout", function (this: L.Layer) {
+              (this as L.Path).setStyle({ fillOpacity: 0.7, weight: 2 });
+            });
+          },
+        }).addTo(map as unknown as L.Map);
+
+        layersRef.current.push(layer);
+
+        if (selectedKecamatanRef.current) {
+          const nama = selectedKecamatanRef.current;
+          const kpm = kpmMap[nama] || 0;
+          onKelurahanSelect({
+            id: nama,
+            name: nama,
+            kecamatan: nama,
+            penerima: kpm,
+            total: kpm,
+            level: getLevel(kpm, selectedBantuanRef.current),
+            lat: 0,
+            lng: 0,
+            jenisBantuan: selectedBantuanRef.current,
+          });
+        }
+      })
+      .catch((err) => console.error("Error loading GeoJSON:", err));
+  }, [bansosData, onKelurahanSelect, selectedBantuan]);
 
   return (
     <div
@@ -159,4 +232,3 @@ export default function DistributionMap({ selectedBantuan, selectedTahun, onKelu
 }
 
 export type { KelurahanData };
-export { KELURAHAN_DATA };

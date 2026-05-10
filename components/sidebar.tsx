@@ -21,11 +21,9 @@ const NAV_ITEMS = [
 
 const BANTUAN_OPTIONS = [
   "Semua Jenis",
+  "Sembako/BPNT",
   "PKH",
-  "BPNT",
-  "BST",
-  "BLT Dana Desa",
-  "Bansos Tunai",
+  "PBI JK",
 ];
 
 const TAHUN_OPTIONS = ["2026", "2025", "2024", "2023", "2022"];

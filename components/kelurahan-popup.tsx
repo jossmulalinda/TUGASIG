@@ -1,20 +1,20 @@
 import { X, Users, MapPin, TrendingUp, CheckCircle2 } from "lucide-react";
 import type { KelurahanData } from "./distribution-map";
 
-const LEVEL_LABELS: Record<KelurahanData["level"], string> = {
+type Level = "very-high" | "high" | "medium" | "low";
+
+const LEVEL_LABELS: Record<Level, string> = {
   "very-high": "Sangat Tinggi",
   "high": "Tinggi",
   "medium": "Sedang",
   "low": "Rendah",
-  "very-low": "Sangat Rendah",
 };
 
-const LEVEL_COLORS: Record<KelurahanData["level"], string> = {
+const LEVEL_COLORS: Record<Level, string> = {
   "very-high": "bg-red-100 text-red-700",
   "high": "bg-orange-100 text-orange-700",
   "medium": "bg-yellow-100 text-yellow-700",
-  "low": "bg-green-100 text-green-700",
-  "very-low": "bg-teal-100 text-teal-700",
+  "low": "bg-teal-100 text-teal-700",
 };
 
 interface Props {
@@ -23,7 +23,7 @@ interface Props {
 }
 
 export default function KelurahanPopup({ data, onClose }: Props) {
-  const pct = Math.round((data.penerima / data.total) * 100);
+  const level = data.level as Level;
 
   return (
     <div className="bg-card border border-border rounded-xl shadow-2xl w-72 overflow-hidden">
@@ -49,47 +49,47 @@ export default function KelurahanPopup({ data, onClose }: Props) {
       <div className="p-4 space-y-4">
         {/* Level badge */}
         <div className="flex items-center gap-2">
-          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${LEVEL_COLORS[data.level]}`}>
-            {LEVEL_LABELS[data.level]}
+          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${LEVEL_COLORS[level]}`}>
+            {LEVEL_LABELS[level]}
           </span>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3">
           <div className="bg-muted/50 rounded-lg p-3">
             <div className="flex items-center gap-1.5 mb-1">
               <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
-              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Penerima</span>
+              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+                Total KPM
+              </span>
             </div>
-            <p className="text-lg font-bold text-foreground">{data.penerima.toLocaleString("id-ID")}</p>
-            <p className="text-[10px] text-muted-foreground">jiwa</p>
-          </div>
-          <div className="bg-muted/50 rounded-lg p-3">
-            <div className="flex items-center gap-1.5 mb-1">
-              <Users className="w-3.5 h-3.5 text-primary" />
-              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Total KK</span>
-            </div>
-            <p className="text-lg font-bold text-foreground">{data.total.toLocaleString("id-ID")}</p>
-            <p className="text-[10px] text-muted-foreground">kepala keluarga</p>
+            <p className="text-lg font-bold text-foreground">
+              {data.penerima.toLocaleString("id-ID")}
+            </p>
+            <p className="text-[10px] text-muted-foreground">Keluarga Penerima Manfaat</p>
           </div>
         </div>
 
-        {/* Progress */}
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <div className="flex items-center gap-1.5">
-              <TrendingUp className="w-3.5 h-3.5 text-primary" />
-              <span className="text-xs font-medium text-foreground">Cakupan</span>
-            </div>
-            <span className="text-xs font-bold text-primary">{pct}%</span>
+        {/* Jenis Bantuan */}
+        <div className="bg-muted/50 rounded-lg p-3">
+          <div className="flex items-center gap-1.5 mb-1">
+            <TrendingUp className="w-3.5 h-3.5 text-primary" />
+            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+              Jenis Bantuan
+            </span>
           </div>
-          <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-            <div
-              className="h-full bg-primary rounded-full transition-all duration-500"
-              style={{ width: `${pct}%` }}
-            />
+          <p className="text-sm font-semibold text-foreground">{data.jenisBantuan}</p>
+        </div>
+
+        {/* Kecamatan */}
+        <div className="bg-muted/50 rounded-lg p-3">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Users className="w-3.5 h-3.5 text-primary" />
+            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+              Kecamatan
+            </span>
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1">dari total kepala keluarga</p>
+          <p className="text-sm font-semibold text-foreground">{data.kecamatan}</p>
         </div>
       </div>
     </div>

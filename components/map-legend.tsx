@@ -3,16 +3,36 @@
 import { useState } from "react";
 import { Layers, ChevronDown, ChevronUp } from "lucide-react";
 
-const LEGEND_ITEMS = [
-  { color: "#d4460e", label: "Sangat Tinggi", range: "> 1000 penerima" },
-  { color: "#e87d2c", label: "Tinggi", range: "500 – 1000 penerima" },
-  { color: "#d4b31a", label: "Sedang", range: "300 – 500 penerima" },
-  { color: "#4caf7b", label: "Rendah", range: "100 – 300 penerima" },
-  { color: "#2faebb", label: "Sangat Rendah", range: "< 100 penerima" },
-];
+const LEGEND_MAP: Record<string, { color: string; label: string; range: string }[]> = {
+  "PBI JK": [
+    { color: "#d4460e", label: "Sangat Tinggi", range: "> 6.000 KPM" },
+    { color: "#e87d2c", label: "Tinggi", range: "2.501 – 6.000 KPM" },
+    { color: "#4caf7b", label: "Sedang", range: "1.801 – 2.500 KPM" },
+    { color: "#2faebb", label: "Rendah", range: "≤ 1.800 KPM" },
+  ],
+  "PKH": [
+    { color: "#d4460e", label: "Sangat Tinggi", range: "> 400 KPM" },
+    { color: "#e87d2c", label: "Tinggi", range: "282 – 400 KPM" },
+    { color: "#4caf7b", label: "Sedang", range: "227 – 281 KPM" },
+    { color: "#2faebb", label: "Rendah", range: "≤ 226 KPM" },
+  ],
+  "Sembako/BPNT": [
+    { color: "#d4460e", label: "Sangat Tinggi", range: "> 550 KPM" },
+    { color: "#e87d2c", label: "Tinggi", range: "402 – 550 KPM" },
+    { color: "#4caf7b", label: "Sedang", range: "352 – 401 KPM" },
+    { color: "#2faebb", label: "Rendah", range: "≤ 351 KPM" },
+  ],
+  "Semua Jenis": [
+    { color: "#d4460e", label: "Sangat Tinggi", range: "> 6.000 KPM" },
+    { color: "#e87d2c", label: "Tinggi", range: "3.001 – 6.000 KPM" },
+    { color: "#4caf7b", label: "Sedang", range: "1.001 – 3.000 KPM" },
+    { color: "#2faebb", label: "Rendah", range: "≤ 1.000 KPM" },
+  ],
+};
 
-export default function MapLegend() {
+export default function MapLegend({ selectedBantuan }: { selectedBantuan: string }) {
   const [open, setOpen] = useState(false);
+  const items = LEGEND_MAP[selectedBantuan] || LEGEND_MAP["Semua Jenis"];
 
   return (
     <div className="bg-card/95 backdrop-blur-sm border border-border rounded-xl shadow-lg overflow-hidden w-52">
@@ -37,7 +57,7 @@ export default function MapLegend() {
 
       {open && (
         <ul className="px-3 pb-3 pt-1 space-y-2 border-t border-border/50">
-          {LEGEND_ITEMS.map(({ color, label, range }) => (
+          {items.map(({ color, label, range }) => (
             <li key={label} className="flex items-center gap-2.5">
               <span
                 className="w-3 h-3 rounded-full shrink-0 ring-2 ring-white/80 shadow-sm"
