@@ -49,7 +49,7 @@ export default function Sidebar({
       style={{ background: "var(--sidebar)" }}
     >
       {/* Logo area */}
-      <div className="relative flex items-center gap-3 px-5 py-5 overflow-hidden">
+      <div className="relative flex items-center gap-3 px-5 h-[72px] border-b border-sidebar-border overflow-hidden shrink-0">
         {/* Subtle gradient accent */}
         <div
           className="absolute inset-0 opacity-20"
@@ -75,11 +75,6 @@ export default function Sidebar({
           </div>
         </div>
       </div>
-
-      <div
-        className="mx-4 h-px"
-        style={{ background: "var(--sidebar-border)" }}
-      />
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 overflow-y-auto">

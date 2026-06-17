@@ -66,16 +66,51 @@ const TAHUN_OPTIONS   = ["2026", "2025", "2024", "2023", "2022"];
 
 // ── Theme Toggle ──────────────────────────────────────────
 function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <div className="w-[73.125px] h-[32.5px] shrink-0" />;
+  }
+
+  const isDark = resolvedTheme === "dark";
+
   return (
-    <button
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      aria-label="Toggle dark mode"
-      className="relative w-8 h-8 rounded-lg flex items-center justify-center border border-border bg-background hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-    >
-      <Sun  className="w-4 h-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 absolute" />
-      <Moon className="w-4 h-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 absolute" />
-    </button>
+    <label className="theme-switch flex items-center shrink-0">
+      <input
+        type="checkbox"
+        className="theme-switch__checkbox"
+        checked={isDark}
+        onChange={(e) => setTheme(e.target.checked ? "dark" : "light")}
+        aria-label="Toggle theme mode"
+      />
+      <div className="theme-switch__container">
+        <div className="theme-switch__clouds"></div>
+        <div className="theme-switch__stars-container">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 55" fill="none">
+            <path
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M135.831 3.00688C135.055 3.85027 134.111 4.29946 133 4.35447C134.111 4.40947 135.055 4.85867 135.831 5.71123C136.607 6.55462 136.996 7.56303 136.996 8.72727C136.996 7.95722 137.172 7.25134 137.525 6.59129C137.886 5.93124 138.372 5.39954 138.98 5.00535C139.598 4.60199 140.268 4.39114 141 4.35447C139.88 4.2903 138.936 3.85027 138.16 3.00688C137.384 2.16348 136.996 1.16425 136.996 0C136.996 1.16425 136.607 2.16348 135.831 3.00688ZM31 23.3545C32.1114 23.2995 33.0551 22.8503 33.8313 22.0069C34.6075 21.1635 34.9956 20.1642 34.9956 19C34.9956 20.1642 35.3837 21.1635 36.1599 22.0069C36.9361 22.8503 37.8798 23.2903 39 23.3545C38.2679 23.3911 37.5976 23.602 36.9802 24.0053C36.3716 24.3995 35.8864 24.9312 35.5248 25.5913C35.172 26.2513 34.9956 26.9572 34.9956 27.7273C34.9956 26.563 34.6075 25.5546 33.8313 24.7112C33.0551 23.8587 32.1114 23.4095 31 23.3545ZM0 36.3545C1.11136 36.2995 2.05513 35.8503 2.83131 35.0069C3.6075 34.1635 3.99559 33.1642 3.99559 32C3.99559 33.1642 4.38368 34.1635 5.15987 35.0069C5.93605 35.8503 6.87982 36.2903 8 36.3545C7.26792 36.3911 6.59757 36.602 5.98015 37.0053C5.37155 37.3995 4.88644 37.9312 4.52481 38.5913C4.172 39.2513 3.99559 39.9572 3.99559 40.7273C3.99559 39.563 3.6075 38.5546 2.83131 37.7112C2.05513 36.8587 1.11136 36.4095 0 36.3545ZM56.8313 24.0069C56.0551 24.8503 55.1114 25.2995 54 25.3545C55.1114 25.4095 56.0551 25.8587 56.8313 26.7112C57.6075 27.5546 57.9956 28.563 57.9956 29.7273C57.9956 28.9572 58.172 28.2513 58.5248 27.5913C58.8864 26.9312 59.3716 26.3995 59.9802 26.0053C60.5976 25.602 61.2679 25.3911 62 25.3545C60.8798 25.2903 59.9361 24.8503 59.1599 24.0069C58.3837 23.1635 57.9956 22.1642 57.9956 21C57.9956 22.1642 57.6075 23.1635 56.8313 24.0069ZM81 25.3545C82.1114 25.2995 83.0551 24.8503 83.8313 24.0069C84.6075 23.1635 84.9956 22.1642 84.9956 21C84.9956 22.1642 85.3837 23.1635 86.1599 24.0069C86.9361 24.8503 87.8798 25.2903 89 25.3545C88.2679 25.3911 87.5976 25.602 86.9802 26.0053C86.3716 26.3995 85.8864 26.9312 85.5248 27.5913C85.172 28.2513 84.9956 28.9572 84.9956 29.7273C84.9956 28.563 84.6075 27.5546 83.8313 26.7112C83.0551 25.8587 82.1114 25.4095 81 25.3545ZM136 36.3545C137.111 36.2995 138.055 35.8503 138.831 35.0069C139.607 34.1635 139.996 33.1642 139.996 32C139.996 33.1642 140.384 34.1635 141.16 35.0069C141.936 35.8503 142.88 36.2903 144 36.3545C143.268 36.3911 142.598 36.602 141.98 37.0053C141.372 37.3995 140.886 37.9312 140.525 38.5913C140.172 39.2513 139.996 39.9572 139.996 40.7273C139.996 39.563 139.607 38.5546 138.831 37.7112C138.055 36.8587 137.111 36.4095 136 36.3545ZM101.831 49.0069C101.055 49.8503 100.111 50.2995 99 50.3545C100.111 50.4095 101.055 50.8587 101.831 51.7112C102.607 52.5546 102.996 53.563 102.996 54.7273C102.996 53.9572 103.172 53.2513 103.525 52.5913C103.886 51.9312 104.372 51.3995 104.98 51.0053C105.598 50.602 106.268 50.3911 107 50.3545C105.88 50.2903 104.936 49.8503 104.16 49.0069C103.384 48.1635 102.996 47.1642 102.996 46C102.996 47.1642 102.607 48.1635 101.831 49.0069Z"
+              fill="currentColor"
+            ></path>
+          </svg>
+        </div>
+        <div className="theme-switch__circle-container">
+          <div className="theme-switch__sun-moon-container">
+            <div className="theme-switch__moon">
+              <div className="theme-switch__spot"></div>
+              <div className="theme-switch__spot"></div>
+              <div className="theme-switch__spot"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </label>
   );
 }
 
@@ -248,7 +283,7 @@ export default function BansosPage() {
 
       <main className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* ── Header ──────────────────────────────────── */}
-        <header className="shrink-0 flex items-center justify-between px-3 sm:px-4 py-2.5 bg-card border-b border-border shadow-sm gap-2">
+        <header className="shrink-0 h-[72px] flex items-center justify-between px-3 sm:px-4 bg-card border-b border-border shadow-sm gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 ring-1 ring-border">
               <img src="/dinsoss-logo.png" alt="Logo" className="w-full h-full object-cover" />
@@ -312,12 +347,7 @@ export default function BansosPage() {
               </button>
             )}
 
-            {/* Live indicator */}
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg gradient-bg-soft text-primary text-xs font-semibold">
-              <Layers className="w-3 h-3" />
-              <span>Live</span>
-            </div>
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+
 
             {/* Mobile filter — in header */}
             <MobileFilterHeader
@@ -403,26 +433,26 @@ export default function BansosPage() {
           {activeNav === "home" && (
             <div className="animate-fade-in w-full">
               {/* Hero Banner Section */}
-              <div className="relative overflow-hidden w-full" style={{ background: "var(--gradient-hero)" }}>
-                {/* Decorative blobs */}
-                <div className="absolute top-0 right-0 w-80 h-80 rounded-full opacity-10 blur-[60px]" style={{ background: "var(--gradient-primary)", transform: "translate(20%, -20%)" }} />
-                <div className="absolute bottom-0 left-0 w-72 h-72 rounded-full opacity-10 blur-[50px]" style={{ background: "var(--gradient-primary)", transform: "translate(-20%, 20%)" }} />
+              <div className="relative overflow-hidden w-full bg-gradient-to-br from-card via-muted/30 to-card dark:from-background dark:via-muted/10 dark:to-background border-b border-border">
+                {/* Decorative sharp background circles */}
+                <div className="absolute top-0 right-0 w-80 h-80 rounded-full opacity-[0.08]" style={{ background: "var(--gradient-primary)", transform: "translate(30%, -30%)" }} />
+                <div className="absolute bottom-0 left-0 w-72 h-72 rounded-full opacity-[0.08]" style={{ background: "var(--gradient-primary)", transform: "translate(-30%, 30%)" }} />
 
                 <div className="max-w-6xl mx-auto px-6 py-12 md:py-16 lg:py-20 grid grid-cols-1 md:grid-cols-12 gap-8 items-center relative z-10">
                   {/* Left Column: Words and CTA */}
                   <div className="col-span-12 md:col-span-7 space-y-5 text-left order-2 md:order-1">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border border-white/20 text-white/70 bg-white/10 backdrop-blur-sm">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border border-border bg-muted/50 text-muted-foreground">
                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                       Data Live 2026
                     </div>
-                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight tracking-tight">
+                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-foreground leading-tight tracking-tight">
                       Sistem Informasi
-                      <span className="block mt-1" style={{ background: "linear-gradient(to right, #93c5fd, #67e8f9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                      <span className="block mt-1" style={{ background: "linear-gradient(to right, #3b82f6, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                         Distribusi Bansos
                       </span>
                       Kota Ternate
                     </h2>
-                    <p className="text-sm sm:text-base text-white/70 leading-relaxed max-w-xl">
+                    <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-xl">
                       Platform peta distribusi bantuan sosial Kota Ternate yang menyajikan data penerima manfaat
                       secara spasial dan interaktif untuk mendukung transparansi dan pengambilan keputusan.
                     </p>
@@ -430,128 +460,28 @@ export default function BansosPage() {
                       <button onClick={() => setActiveNav("peta")} className="px-6 py-3 rounded-xl gradient-bg text-white font-semibold text-sm shadow-lg hover:opacity-95 transition-all transform hover:-translate-y-0.5">
                         Lihat Peta
                       </button>
-                      <button onClick={() => setActiveNav("dashboard")} className="px-6 py-3 rounded-xl bg-white/10 border border-white/15 text-white font-semibold text-sm backdrop-blur-sm hover:bg-white/20 transition-all transform hover:-translate-y-0.5">
+                      <button onClick={() => setActiveNav("dashboard")} className="px-6 py-3 rounded-xl bg-muted hover:bg-muted/80 text-foreground font-semibold text-sm border border-border transition-all transform hover:-translate-y-0.5 shadow-sm">
                         Dashboard Statistik
                       </button>
                     </div>
 
                     {/* Bottom Stats ala WPU */}
-                    <div className="pt-8 border-t border-white/10 grid grid-cols-2 gap-4 max-w-md">
+                    <div className="pt-8 border-t border-border grid grid-cols-2 gap-4 max-w-md">
                       <div>
-                        <p className="text-2xl lg:text-3xl font-extrabold text-white">8 Wilayah</p>
-                        <p className="text-[10px] text-white/50 font-bold uppercase tracking-wider mt-0.5">Kecamatan Ternate</p>
+                        <p className="text-2xl lg:text-3xl font-extrabold text-foreground">8 Wilayah</p>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5">Kecamatan Ternate</p>
                       </div>
                       <div>
-                        <p className="text-2xl lg:text-3xl font-extrabold text-white">15.000+</p>
-                        <p className="text-[10px] text-white/50 font-bold uppercase tracking-wider mt-0.5">KPM Terdaftar</p>
+                        <p className="text-2xl lg:text-3xl font-extrabold text-foreground">15.000+</p>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5">KPM Terdaftar</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Right Column: Cartoon Sapiens/OpenPeeps Illustration */}
                   <div className="col-span-12 md:col-span-5 flex justify-center order-1 md:order-2">
-                    <div className="w-full max-w-[340px] md:max-w-none transition-transform duration-500 hover:scale-105">
-                      <svg viewBox="0 0 500 500" className="w-full h-auto select-none drop-shadow-2xl" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                          <linearGradient id="globe-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.8" />
-                            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.2" />
-                          </linearGradient>
-                          <radialGradient id="glow" cx="50%" cy="50%" r="50%">
-                            <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.35" />
-                            <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
-                          </radialGradient>
-                        </defs>
-
-                        {/* Glowing Aura behind globe */}
-                        <circle cx="320" cy="220" r="140" fill="url(#glow)" />
-
-                        {/* The Globe Grid Lines (holographic/data lines) */}
-                        <g opacity="0.85">
-                          {/* Outer Sphere */}
-                          <circle cx="320" cy="220" r="100" stroke="#22d3ee" strokeWidth="2.5" strokeDasharray="4 4" />
-                          <circle cx="320" cy="220" r="100" fill="url(#globe-grad)" opacity="0.15" />
-                          
-                          {/* Longitudes & Latitudes */}
-                          <ellipse cx="320" cy="220" rx="100" ry="40" stroke="#06b6d4" strokeWidth="1.5" opacity="0.6" />
-                          <ellipse cx="320" cy="220" rx="40" ry="100" stroke="#06b6d4" strokeWidth="1.5" opacity="0.6" />
-                          <ellipse cx="320" cy="220" rx="100" ry="70" stroke="#3b82f6" strokeWidth="1.5" opacity="0.5" />
-                          <line x1="220" y1="220" x2="420" y2="220" stroke="#3b82f6" strokeWidth="1.5" opacity="0.6" />
-                          <line x1="320" y1="120" x2="320" y2="320" stroke="#3b82f6" strokeWidth="1.5" opacity="0.6" />
-
-                          {/* Connecting Data Lines */}
-                          <path d="M 270,160 Q 300,140 350,180" stroke="#67e8f9" strokeWidth="2" fill="none" strokeDasharray="2 2" />
-                          <path d="M 260,250 Q 330,280 370,200" stroke="#67e8f9" strokeWidth="2" fill="none" />
-                          
-                          {/* Data Points (Glowing Dots) */}
-                          <circle cx="270" cy="160" r="5" fill="#22d3ee" />
-                          <circle cx="270" cy="160" r="9" stroke="#22d3ee" strokeWidth="1.5" opacity="0.4" />
-                          
-                          <circle cx="350" cy="180" r="4" fill="#3b82f6" />
-                          <circle cx="260" cy="250" r="6" fill="#22d3ee" />
-                          <circle cx="260" cy="250" r="10" stroke="#22d3ee" strokeWidth="1.5" opacity="0.3" />
-                          
-                          <circle cx="370" cy="200" r="5" fill="#67e8f9" />
-                          <circle cx="330" cy="230" r="4" fill="#3b82f6" />
-                        </g>
-
-                        {/* Floating Data Cards/Charts around globe */}
-                        <g opacity="0.95" transform="translate(360, 80)">
-                          <rect width="90" height="50" rx="8" fill="#1e293b" fillOpacity="0.8" stroke="#334155" strokeWidth="1.5" />
-                          <path d="M10,35 L30,20 L50,30 L80,15" stroke="#22d3ee" strokeWidth="2" fill="none" strokeLinecap="round" />
-                          <circle cx="80" cy="15" r="3" fill="#22d3ee" />
-                        </g>
-                        <g opacity="0.95" transform="translate(200, 310)">
-                          <rect width="110" height="40" rx="8" fill="#1e293b" fillOpacity="0.8" stroke="#334155" strokeWidth="1.5" />
-                          <rect x="12" y="12" width="25" height="6" rx="3" fill="#64748b" />
-                          <rect x="12" y="22" width="50" height="6" rx="3" fill="#3b82f6" />
-                          <circle cx="92" cy="20" r="7" fill="#10b981" />
-                        </g>
-
-                        {/* Sapiens/OpenPeeps Style Cartoon Character */}
-                        <g transform="translate(60, 100)">
-                          {/* Shadow beneath character */}
-                          <ellipse cx="90" cy="290" rx="70" ry="10" fill="#000000" fillOpacity="0.2" />
-
-                          {/* Seat / Chair Block */}
-                          <path d="M 40,285 L 120,285 L 110,210 L 50,210 Z" fill="#334155" stroke="#1e293b" strokeWidth="3" />
-                          
-                          {/* Pants / Legs */}
-                          <path d="M 65,210 L 60,265 L 80,265 L 80,210 Z" fill="#64748b" stroke="#1e293b" strokeWidth="3" strokeLinejoin="round" />
-                          <path d="M 90,210 L 95,265 L 115,265 L 110,210 Z" fill="#64748b" stroke="#1e293b" strokeWidth="3" strokeLinejoin="round" />
-                          {/* Shoes */}
-                          <path d="M 60,265 Q 45,265 45,275 L 80,275 L 80,265 Z" fill="#1e293b" stroke="#1e293b" strokeWidth="3" strokeLinejoin="round" />
-                          <path d="M 95,265 Q 110,265 110,275 L 120,275 L 115,265 Z" fill="#1e293b" stroke="#1e293b" strokeWidth="3" strokeLinejoin="round" />
-
-                          {/* Torso / Shirt */}
-                          <path d="M 60,210 Q 55,130 75,130 L 105,130 Q 115,160 110,210 Z" fill="#3b82f6" stroke="#1e293b" strokeWidth="3" strokeLinejoin="round" />
-
-                          {/* Neck */}
-                          <rect x="82" y="115" width="12" height="20" fill="#fbcfe8" stroke="#1e293b" strokeWidth="3" strokeLinejoin="round" />
-                          
-                          {/* Head (OpenPeeps style) */}
-                          <circle cx="88" cy="92" r="28" fill="#fbcfe8" stroke="#1e293b" strokeWidth="3" />
-                          
-                          {/* Hair (Thick outline) */}
-                          <path d="M 62,88 C 60,70 70,62 88,60 C 105,58 118,72 116,90 C 110,85 105,92 100,90 C 95,85 90,88 88,88 C 75,88 70,82 62,88 Z" fill="#1e293b" stroke="#1e293b" strokeWidth="3" strokeLinejoin="round" />
-                          
-                          {/* Glasses */}
-                          <circle cx="98" cy="92" r="8" stroke="#1e293b" strokeWidth="2.5" fill="none" />
-                          <line x1="106" y1="92" x2="114" y2="92" stroke="#1e293b" strokeWidth="2.5" />
-                          
-                          {/* Smile & Nose */}
-                          <path d="M 112,98 Q 110,103 105,101" stroke="#1e293b" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-                          <path d="M 116,95 Q 118,95 117,98" stroke="#1e293b" strokeWidth="2" fill="none" />
-
-                          {/* Left arm resting on lap */}
-                          <path d="M 62,140 Q 50,180 75,190" stroke="#1e293b" strokeWidth="3" fill="none" strokeLinecap="round" />
-                          
-                          {/* Right arm pointing towards the globe */}
-                          <path d="M 100,145 Q 140,120 180,140" fill="none" stroke="#1e293b" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                          {/* Hand */}
-                          <circle cx="184" cy="140" r="5" fill="#fbcfe8" stroke="#1e293b" strokeWidth="2.5" />
-                        </g>
-                      </svg>
+                    <div className="w-full max-w-[380px] md:max-w-none transition-transform duration-500 hover:scale-105">
+                      <img src="/sapiens.svg" alt="Sapiens Illustration" className="w-full h-auto max-h-[350px] md:max-h-[420px] select-none drop-shadow-2xl" />
                     </div>
                   </div>
                 </div>
@@ -581,61 +511,69 @@ export default function BansosPage() {
 
           {/* ── Tentang View ─────────────────────────────── */}
           {activeNav === "tentang" && (
-            <div className="animate-fade-in p-4 md:p-6 max-w-xl mx-auto pt-6 space-y-4">
-              <div className="bg-card rounded-2xl border border-border p-5 shadow-sm overflow-hidden relative">
-                <div className="absolute inset-x-0 top-0 h-1 gradient-bg" />
-                <div className="flex items-start gap-3 pt-1">
-                  <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 ring-2 ring-border shadow-sm">
-                    <img src="/dinsoss-logo.png" alt="Logo" className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-bold text-foreground leading-tight">Bansos Ternate</h2>
-                    <p className="text-xs text-muted-foreground mt-0.5">Sistem Informasi Geografis Distribusi Bantuan Sosial</p>
-                    <div className="flex items-center gap-1.5 mt-2">
-                      <span className="text-[10px] px-2 py-0.5 rounded-full gradient-bg text-white font-semibold">v1.0.0</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold">Live</span>
+            <div className="relative w-full min-h-[85vh] flex items-center justify-center p-4 md:p-6 overflow-hidden bg-gradient-to-br from-background via-muted/30 to-background dark:from-background dark:via-muted/10 dark:to-background">
+              {/* Decorative sharp background circles */}
+              <div className="absolute top-0 right-0 w-80 h-80 rounded-full opacity-[0.08] pointer-events-none" style={{ background: "var(--gradient-primary)", transform: "translate(30%, -30%)" }} />
+              <div className="absolute bottom-0 left-0 w-72 h-72 rounded-full opacity-[0.08] pointer-events-none" style={{ background: "var(--gradient-primary)", transform: "translate(-30%, 30%)" }} />
+
+              <div className="relative max-w-xl w-full space-y-4 z-10 animate-fade-in">
+                <div className="bg-card/85 backdrop-blur-md rounded-2xl border border-border p-5 shadow-sm overflow-hidden relative">
+                  <div className="absolute inset-x-0 top-0 h-1 gradient-bg" />
+                  <div className="flex items-start gap-3 pt-1">
+                    <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 ring-2 ring-border shadow-sm">
+                      <img src="/dinsoss-logo.png" alt="Logo" className="w-full h-full object-cover" />
                     </div>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground leading-relaxed mt-4">
-                  Platform digital milik Pemerintah Kota Ternate untuk memonitor dan memvisualisasikan sebaran penerima bantuan sosial di seluruh wilayah Kota Ternate, Provinsi Maluku Utara.
-                </p>
-              </div>
-              <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
-                <div className="px-4 py-3 border-b border-border bg-muted/30">
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Informasi Sistem</p>
-                </div>
-                <div className="divide-y divide-border/60">
-                  {[
-                    ["Dikembangkan oleh", "Mahasiswa Informatika Univ. Khairun"],
-                    ["Tim", "TSI · WLD · JGOM · PHARAI"],
-                    ["Sumber Data", "Dinas Sosial Kota Ternate"],
-                    ["Pembaruan terakhir", "April 2026"],
-                    ["Teknologi", "Next.js · Leaflet · PostgreSQL"],
-                  ].map(([k, v]) => (
-                    <div key={k} className="flex items-start justify-between px-4 py-2.5 gap-3">
-                      <span className="text-[11px] text-muted-foreground shrink-0">{k}</span>
-                      <span className="font-medium text-[11px] text-foreground text-right">{v}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Program Bantuan</p>
-                <div className="grid grid-cols-1 gap-2">
-                  {[
-                    { name: "Sembako / BPNT", desc: "Bantuan Pangan Non Tunai",                             emoji: "🛒", bg: "bg-blue-500/10" },
-                    { name: "PKH",            desc: "Program Keluarga Harapan",                             emoji: "👨‍👩‍👧", bg: "bg-emerald-500/10" },
-                    { name: "PBI JKN",        desc: "Penerima Bantuan Iuran Jaminan Kesehatan Nasional",    emoji: "🏥", bg: "bg-rose-500/10" },
-                  ].map(({ name, desc, emoji, bg }) => (
-                    <div key={name} className="bg-card rounded-xl border border-border px-4 py-3 flex items-center gap-3">
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0 ${bg}`}>{emoji}</div>
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">{name}</p>
-                        <p className="text-[11px] text-muted-foreground">{desc}</p>
+                    <div>
+                      <h2 className="text-base font-bold text-foreground leading-tight">Bansos Ternate</h2>
+                      <p className="text-xs text-muted-foreground mt-0.5">Sistem Informasi Geografis Distribusi Bantuan Sosial</p>
+                      <div className="flex items-center gap-1.5 mt-2">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full gradient-bg text-white font-semibold">v1.0.0</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold">Live</span>
                       </div>
                     </div>
-                  ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed mt-4">
+                    Platform digital milik Pemerintah Kota Ternate untuk memonitor dan memvisualisasikan sebaran penerima bantuan sosial di seluruh wilayah Kota Ternate, Provinsi Maluku Utara.
+                  </p>
+                </div>
+
+                <div className="bg-card/85 backdrop-blur-md rounded-2xl border border-border shadow-sm overflow-hidden">
+                  <div className="px-4 py-3 border-b border-border bg-muted/30">
+                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Informasi Sistem</p>
+                  </div>
+                  <div className="divide-y divide-border/60">
+                    {[
+                      ["Dikembangkan oleh", "Mahasiswa Informatika Univ. Khairun"],
+                      ["Tim", "TSI · WLD · JGOM · PHARAI"],
+                      ["Sumber Data", "Dinas Sosial Kota Ternate"],
+                      ["Pembaruan terakhir", "April 2026"],
+                      ["Teknologi", "Next.js · Leaflet · PostgreSQL"],
+                    ].map(([k, v]) => (
+                      <div key={k} className="flex items-start justify-between px-4 py-2.5 gap-3">
+                        <span className="text-[11px] text-muted-foreground shrink-0">{k}</span>
+                        <span className="font-medium text-[11px] text-foreground text-right">{v}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-card/45 backdrop-blur-sm rounded-2xl p-4 border border-border/40">
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Program Bantuan</p>
+                  <div className="grid grid-cols-1 gap-2">
+                    {[
+                      { name: "Sembako / BPNT", desc: "Bantuan Pangan Non Tunai",                             emoji: "🛒", bg: "bg-blue-500/10" },
+                      { name: "PKH",            desc: "Program Keluarga Harapan",                             emoji: "👨‍👩‍👧", bg: "bg-emerald-500/10" },
+                      { name: "PBI JKN",        desc: "Penerima Bantuan Iuran Jaminan Kesehatan Nasional",    emoji: "🏥", bg: "bg-rose-500/10" },
+                    ].map(({ name, desc, emoji, bg }) => (
+                      <div key={name} className="bg-card/90 backdrop-blur-md rounded-xl border border-border px-4 py-3 flex items-center gap-3 animate-fade-in">
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0 ${bg}`}>{emoji}</div>
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">{name}</p>
+                          <p className="text-[11px] text-muted-foreground">{desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>

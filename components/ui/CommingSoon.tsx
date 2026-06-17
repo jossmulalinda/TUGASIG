@@ -10,9 +10,9 @@ interface ComingSoonProps {
 export default function ComingSoon({ label, onBack }: ComingSoonProps) {
   return (
     <div className="relative min-h-[75vh] w-full flex items-center justify-center px-6 overflow-hidden bg-gradient-to-br from-background via-muted/30 to-background dark:from-background dark:via-muted/10 dark:to-background">
-      {/* Decorative glowing background elements */}
-      <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-72 h-72 rounded-full bg-accent/10 blur-[100px] pointer-events-none" />
+      {/* Decorative sharp background circles */}
+      <div className="absolute top-0 right-0 w-80 h-80 rounded-full opacity-[0.08] pointer-events-none" style={{ background: "var(--gradient-primary)", transform: "translate(30%, -30%)" }} />
+      <div className="absolute bottom-0 left-0 w-72 h-72 rounded-full opacity-[0.08] pointer-events-none" style={{ background: "var(--gradient-primary)", transform: "translate(-30%, 30%)" }} />
 
       {/* Glassmorphism Card */}
       <div className="relative max-w-md w-full p-8 md:p-10 rounded-3xl border border-border/40 bg-card/75 backdrop-blur-md shadow-xl text-center space-y-5">
