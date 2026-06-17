@@ -255,7 +255,7 @@ function MobileFilterHeader({
 
 // ── Main Page ─────────────────────────────────────────────
 export default function BansosPage() {
-  const [activeNav, setActiveNav]                   = useState<View>("peta");
+  const [activeNav, setActiveNav]                   = useState<View>("home");
   const [selectedBantuan, setSelectedBantuan]       = useState("Semua Jenis");
   const [selectedTahun, setSelectedTahun]           = useState("2026");
   const [selectedKelurahan, setSelectedKelurahan]   = useState<KelurahanData | null>(null);
