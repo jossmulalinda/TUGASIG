@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import type L from "leaflet";
+import { useTheme } from "next-themes";
 
 interface KelurahanData {
   id: string;
@@ -104,6 +105,9 @@ export default function DistributionMap({
   const selectedBantuanRef = useRef<string>(selectedBantuan);
   const selectedKecamatanRef = useRef<string | null>(null);
   const geojsonRef  = useRef<unknown>(null);
+  const tileLayerRef = useRef<any>(null);
+
+  const { resolvedTheme } = useTheme();
 
   const [bansosData, setBansosData] = useState<BansosData[]>([]);
   const [apiError, setApiError]     = useState(false);
@@ -123,6 +127,15 @@ export default function DistributionMap({
       .then((data) => setBansosData(data))
       .catch(() => setApiError(true));
   }, [selectedBantuan, selectedTahun]);
+
+  // ── Theme Tile Layer updates ───────────────────────────────
+  useEffect(() => {
+    if (!tileLayerRef.current) return;
+    const tileUrl = resolvedTheme === "dark"
+      ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+      : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+    tileLayerRef.current.setUrl(tileUrl);
+  }, [resolvedTheme]);
 
   // ── Init map ───────────────────────────────────────────────
   useEffect(() => {
@@ -147,12 +160,17 @@ export default function DistributionMap({
       // Scale — bottom right, away from legend (legend is bottom-left)
       L.control.scale({ position: "bottomright", metric: true, imperial: false }).addTo(map);
 
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+      const tileUrl = resolvedTheme === "dark"
+        ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+
+      const tileLayer = L.tileLayer(tileUrl, {
         attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
         subdomains: "abcd",
         maxZoom: 20,
       }).addTo(map);
 
+      tileLayerRef.current = tileLayer;
       mapInstance.current = map;
     };
 

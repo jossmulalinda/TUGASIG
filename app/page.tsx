@@ -401,49 +401,176 @@ export default function BansosPage() {
 
           {/* ── Home View ────────────────────────────────── */}
           {activeNav === "home" && (
-            <div className="animate-fade-in">
-              <div className="relative px-5 py-10 md:py-14 overflow-hidden" style={{ background: "var(--gradient-hero)" }}>
-                <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-10" style={{ background: "var(--gradient-primary)", transform: "translate(30%, -30%)" }} />
-                <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full opacity-10" style={{ background: "var(--gradient-primary)", transform: "translate(-30%, 30%)" }} />
-                <div className="relative max-w-2xl mx-auto text-center space-y-4">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border border-white/20 text-white/70 bg-white/10 backdrop-blur-sm mb-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    Data Live 2026
+            <div className="animate-fade-in w-full">
+              {/* Hero Banner Section */}
+              <div className="relative overflow-hidden w-full" style={{ background: "var(--gradient-hero)" }}>
+                {/* Decorative blobs */}
+                <div className="absolute top-0 right-0 w-80 h-80 rounded-full opacity-10 blur-[60px]" style={{ background: "var(--gradient-primary)", transform: "translate(20%, -20%)" }} />
+                <div className="absolute bottom-0 left-0 w-72 h-72 rounded-full opacity-10 blur-[50px]" style={{ background: "var(--gradient-primary)", transform: "translate(-20%, 20%)" }} />
+
+                <div className="max-w-6xl mx-auto px-6 py-12 md:py-16 lg:py-20 grid grid-cols-1 md:grid-cols-12 gap-8 items-center relative z-10">
+                  {/* Left Column: Words and CTA */}
+                  <div className="col-span-12 md:col-span-7 space-y-5 text-left order-2 md:order-1">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border border-white/20 text-white/70 bg-white/10 backdrop-blur-sm">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Data Live 2026
+                    </div>
+                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight tracking-tight">
+                      Sistem Informasi
+                      <span className="block mt-1" style={{ background: "linear-gradient(to right, #93c5fd, #67e8f9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                        Distribusi Bansos
+                      </span>
+                      Kota Ternate
+                    </h2>
+                    <p className="text-sm sm:text-base text-white/70 leading-relaxed max-w-xl">
+                      Platform peta distribusi bantuan sosial Kota Ternate yang menyajikan data penerima manfaat
+                      secara spasial dan interaktif untuk mendukung transparansi dan pengambilan keputusan.
+                    </p>
+                    <div className="flex flex-wrap items-center gap-3 pt-2">
+                      <button onClick={() => setActiveNav("peta")} className="px-6 py-3 rounded-xl gradient-bg text-white font-semibold text-sm shadow-lg hover:opacity-95 transition-all transform hover:-translate-y-0.5">
+                        Lihat Peta
+                      </button>
+                      <button onClick={() => setActiveNav("dashboard")} className="px-6 py-3 rounded-xl bg-white/10 border border-white/15 text-white font-semibold text-sm backdrop-blur-sm hover:bg-white/20 transition-all transform hover:-translate-y-0.5">
+                        Dashboard Statistik
+                      </button>
+                    </div>
+
+                    {/* Bottom Stats ala WPU */}
+                    <div className="pt-8 border-t border-white/10 grid grid-cols-2 gap-4 max-w-md">
+                      <div>
+                        <p className="text-2xl lg:text-3xl font-extrabold text-white">8 Wilayah</p>
+                        <p className="text-[10px] text-white/50 font-bold uppercase tracking-wider mt-0.5">Kecamatan Ternate</p>
+                      </div>
+                      <div>
+                        <p className="text-2xl lg:text-3xl font-extrabold text-white">15.000+</p>
+                        <p className="text-[10px] text-white/50 font-bold uppercase tracking-wider mt-0.5">KPM Terdaftar</p>
+                      </div>
+                    </div>
                   </div>
-                  <h2 className="text-2xl md:text-3xl font-extrabold text-white leading-tight">
-                    Sistem Informasi
-                    <span className="block" style={{ background: "linear-gradient(to right, #93c5fd, #67e8f9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                      Distribusi Bansos
-                    </span>
-                    Kota Ternate
-                  </h2>
-                  <p className="text-sm text-white/65 leading-relaxed max-w-lg mx-auto">
-                    Platform peta distribusi bantuan sosial Kota Ternate yang menyajikan data penerima manfaat
-                    secara spasial dan interaktif untuk mendukung transparansi dan pengambilan keputusan.
-                  </p>
-                  <div className="flex items-center justify-center gap-3 pt-2">
-                    <button onClick={() => setActiveNav("peta")} className="px-5 py-2.5 rounded-xl gradient-bg text-white font-semibold text-sm shadow-lg hover:opacity-90 transition-opacity">
-                      Lihat Peta
-                    </button>
-                    <button onClick={() => setActiveNav("dashboard")} className="px-5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white font-semibold text-sm backdrop-blur-sm hover:bg-white/20 transition-colors">
-                      Dashboard
-                    </button>
+
+                  {/* Right Column: Cartoon Sapiens/OpenPeeps Illustration */}
+                  <div className="col-span-12 md:col-span-5 flex justify-center order-1 md:order-2">
+                    <div className="w-full max-w-[340px] md:max-w-none transition-transform duration-500 hover:scale-105">
+                      <svg viewBox="0 0 500 500" className="w-full h-auto select-none drop-shadow-2xl" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                          <linearGradient id="globe-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.8" />
+                            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.2" />
+                          </linearGradient>
+                          <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.35" />
+                            <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
+                          </radialGradient>
+                        </defs>
+
+                        {/* Glowing Aura behind globe */}
+                        <circle cx="320" cy="220" r="140" fill="url(#glow)" />
+
+                        {/* The Globe Grid Lines (holographic/data lines) */}
+                        <g opacity="0.85">
+                          {/* Outer Sphere */}
+                          <circle cx="320" cy="220" r="100" stroke="#22d3ee" strokeWidth="2.5" strokeDasharray="4 4" />
+                          <circle cx="320" cy="220" r="100" fill="url(#globe-grad)" opacity="0.15" />
+                          
+                          {/* Longitudes & Latitudes */}
+                          <ellipse cx="320" cy="220" rx="100" ry="40" stroke="#06b6d4" strokeWidth="1.5" opacity="0.6" />
+                          <ellipse cx="320" cy="220" rx="40" ry="100" stroke="#06b6d4" strokeWidth="1.5" opacity="0.6" />
+                          <ellipse cx="320" cy="220" rx="100" ry="70" stroke="#3b82f6" strokeWidth="1.5" opacity="0.5" />
+                          <line x1="220" y1="220" x2="420" y2="220" stroke="#3b82f6" strokeWidth="1.5" opacity="0.6" />
+                          <line x1="320" y1="120" x2="320" y2="320" stroke="#3b82f6" strokeWidth="1.5" opacity="0.6" />
+
+                          {/* Connecting Data Lines */}
+                          <path d="M 270,160 Q 300,140 350,180" stroke="#67e8f9" strokeWidth="2" fill="none" strokeDasharray="2 2" />
+                          <path d="M 260,250 Q 330,280 370,200" stroke="#67e8f9" strokeWidth="2" fill="none" />
+                          
+                          {/* Data Points (Glowing Dots) */}
+                          <circle cx="270" cy="160" r="5" fill="#22d3ee" />
+                          <circle cx="270" cy="160" r="9" stroke="#22d3ee" strokeWidth="1.5" opacity="0.4" />
+                          
+                          <circle cx="350" cy="180" r="4" fill="#3b82f6" />
+                          <circle cx="260" cy="250" r="6" fill="#22d3ee" />
+                          <circle cx="260" cy="250" r="10" stroke="#22d3ee" strokeWidth="1.5" opacity="0.3" />
+                          
+                          <circle cx="370" cy="200" r="5" fill="#67e8f9" />
+                          <circle cx="330" cy="230" r="4" fill="#3b82f6" />
+                        </g>
+
+                        {/* Floating Data Cards/Charts around globe */}
+                        <g opacity="0.95" transform="translate(360, 80)">
+                          <rect width="90" height="50" rx="8" fill="#1e293b" fillOpacity="0.8" stroke="#334155" strokeWidth="1.5" />
+                          <path d="M10,35 L30,20 L50,30 L80,15" stroke="#22d3ee" strokeWidth="2" fill="none" strokeLinecap="round" />
+                          <circle cx="80" cy="15" r="3" fill="#22d3ee" />
+                        </g>
+                        <g opacity="0.95" transform="translate(200, 310)">
+                          <rect width="110" height="40" rx="8" fill="#1e293b" fillOpacity="0.8" stroke="#334155" strokeWidth="1.5" />
+                          <rect x="12" y="12" width="25" height="6" rx="3" fill="#64748b" />
+                          <rect x="12" y="22" width="50" height="6" rx="3" fill="#3b82f6" />
+                          <circle cx="92" cy="20" r="7" fill="#10b981" />
+                        </g>
+
+                        {/* Sapiens/OpenPeeps Style Cartoon Character */}
+                        <g transform="translate(60, 100)">
+                          {/* Shadow beneath character */}
+                          <ellipse cx="90" cy="290" rx="70" ry="10" fill="#000000" fillOpacity="0.2" />
+
+                          {/* Seat / Chair Block */}
+                          <path d="M 40,285 L 120,285 L 110,210 L 50,210 Z" fill="#334155" stroke="#1e293b" strokeWidth="3" />
+                          
+                          {/* Pants / Legs */}
+                          <path d="M 65,210 L 60,265 L 80,265 L 80,210 Z" fill="#64748b" stroke="#1e293b" strokeWidth="3" strokeLinejoin="round" />
+                          <path d="M 90,210 L 95,265 L 115,265 L 110,210 Z" fill="#64748b" stroke="#1e293b" strokeWidth="3" strokeLinejoin="round" />
+                          {/* Shoes */}
+                          <path d="M 60,265 Q 45,265 45,275 L 80,275 L 80,265 Z" fill="#1e293b" stroke="#1e293b" strokeWidth="3" strokeLinejoin="round" />
+                          <path d="M 95,265 Q 110,265 110,275 L 120,275 L 115,265 Z" fill="#1e293b" stroke="#1e293b" strokeWidth="3" strokeLinejoin="round" />
+
+                          {/* Torso / Shirt */}
+                          <path d="M 60,210 Q 55,130 75,130 L 105,130 Q 115,160 110,210 Z" fill="#3b82f6" stroke="#1e293b" strokeWidth="3" strokeLinejoin="round" />
+
+                          {/* Neck */}
+                          <rect x="82" y="115" width="12" height="20" fill="#fbcfe8" stroke="#1e293b" strokeWidth="3" strokeLinejoin="round" />
+                          
+                          {/* Head (OpenPeeps style) */}
+                          <circle cx="88" cy="92" r="28" fill="#fbcfe8" stroke="#1e293b" strokeWidth="3" />
+                          
+                          {/* Hair (Thick outline) */}
+                          <path d="M 62,88 C 60,70 70,62 88,60 C 105,58 118,72 116,90 C 110,85 105,92 100,90 C 95,85 90,88 88,88 C 75,88 70,82 62,88 Z" fill="#1e293b" stroke="#1e293b" strokeWidth="3" strokeLinejoin="round" />
+                          
+                          {/* Glasses */}
+                          <circle cx="98" cy="92" r="8" stroke="#1e293b" strokeWidth="2.5" fill="none" />
+                          <line x1="106" y1="92" x2="114" y2="92" stroke="#1e293b" strokeWidth="2.5" />
+                          
+                          {/* Smile & Nose */}
+                          <path d="M 112,98 Q 110,103 105,101" stroke="#1e293b" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                          <path d="M 116,95 Q 118,95 117,98" stroke="#1e293b" strokeWidth="2" fill="none" />
+
+                          {/* Left arm resting on lap */}
+                          <path d="M 62,140 Q 50,180 75,190" stroke="#1e293b" strokeWidth="3" fill="none" strokeLinecap="round" />
+                          
+                          {/* Right arm pointing towards the globe */}
+                          <path d="M 100,145 Q 140,120 180,140" fill="none" stroke="#1e293b" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                          {/* Hand */}
+                          <circle cx="184" cy="140" r="5" fill="#fbcfe8" stroke="#1e293b" strokeWidth="2.5" />
+                        </g>
+                      </svg>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div className="p-4 md:p-6 max-w-2xl mx-auto">
-                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Fitur Utama</p>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+              {/* Fitur Utama Section */}
+              <div className="max-w-6xl mx-auto px-6 py-10 md:py-16">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">Fitur Utama</p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {[
-                    { icon: Map,      title: "Peta Interaktif",    desc: "Visualisasi sebaran penerima bansos per kecamatan secara real-time", color: "text-blue-500", bg: "bg-blue-500/10", action: "peta" as View },
-                    { icon: BarChart2,title: "Dashboard Statistik", desc: "Grafik dan analisis distribusi berbasis wilayah yang komprehensif",   color: "text-cyan-500", bg: "bg-cyan-500/10", action: "dashboard" as View },
-                    { icon: Database, title: "Data Tabel",          desc: "Tabel data lengkap dengan fitur pencarian dan unduh Excel",           color: "text-violet-500", bg: "bg-violet-500/10", action: "data" as View },
+                    { icon: Map,      title: "Peta Spasial",        desc: "Visualisasi sebaran penerima bansos per kecamatan secara real-time", color: "text-blue-500", bg: "bg-blue-500/10", action: "peta" as View },
+                    { icon: BarChart2,title: "Dashboard Analitik",   desc: "Grafik dan analisis distribusi berbasis wilayah yang komprehensif",   color: "text-cyan-500", bg: "bg-cyan-500/10", action: "dashboard" as View },
+                    { icon: Database, title: "Tabel Data Lengkap",  desc: "Tabel data lengkap dengan fitur pencarian dan unduh Excel",           color: "text-violet-500", bg: "bg-violet-500/10", action: "data" as View },
                   ].map(({ icon: Icon, title, desc, color, bg, action }) => (
-                    <button key={title} onClick={() => setActiveNav(action)} className="bg-card rounded-2xl border border-border p-4 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-200 text-left group">
-                      <div className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center mb-3`}>
-                        <Icon className={`${color}`} size={18} />
+                    <button key={title} onClick={() => setActiveNav(action)} className="bg-card rounded-2xl border border-border p-5 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300 text-left group">
+                      <div className={`w-10 h-10 rounded-xl ${bg} flex items-center justify-center mb-4`}>
+                        <Icon className={`${color}`} size={20} />
                       </div>
-                      <h4 className="font-semibold text-sm text-foreground mb-1 group-hover:text-primary transition-colors">{title}</h4>
+                      <h4 className="font-semibold text-sm text-foreground mb-1.5 group-hover:text-primary transition-colors">{title}</h4>
                       <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
                     </button>
                   ))}
