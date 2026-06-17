@@ -1,6 +1,5 @@
 "use client";
 
-
 import {
   Home,
   Map,
@@ -45,46 +44,85 @@ export default function Sidebar({
   selectedTahun,
   onTahunChange,
 }: SidebarProps) {
-  const sidebarContent = (
-    <div className="flex flex-col h-full">
-      {/* Logo */}
-      <div className="flex items-center gap-3 px-5 py-5 border-b border-[var(--sidebar-border)]">
-        <img
-          src="/dinsoss-logo.png"
-          alt="Dinsoss Logo"
-          className="w-10 h-10 shrink-0"
+  return (
+    <aside className="hidden lg:flex flex-col w-64 shrink-0 h-screen sticky top-0"
+      style={{ background: "var(--sidebar)" }}
+    >
+      {/* Logo area */}
+      <div className="relative flex items-center gap-3 px-5 py-5 overflow-hidden">
+        {/* Subtle gradient accent */}
+        <div
+          className="absolute inset-0 opacity-20"
+          style={{ background: "var(--gradient-primary)" }}
         />
-        <div>
-          <p className="text-sm font-bold text-[var(--sidebar-foreground)] leading-tight">
-            Bansos Ternate
-          </p>
-          <p className="text-xs text-[var(--sidebar-accent-foreground)]/60 leading-tight">
-            Kota Ternate
-          </p>
+        <div className="relative flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 shadow-md ring-2 ring-white/10">
+            <img
+              src="/dinsoss-logo.png"
+              alt="Dinsoss Logo"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div>
+            <p className="text-sm font-bold leading-tight"
+              style={{ color: "var(--sidebar-foreground)" }}>
+              Bansos Ternate
+            </p>
+            <p className="text-[11px] leading-tight"
+              style={{ color: "var(--sidebar-accent-foreground)", opacity: 0.55 }}>
+              Kota Ternate · Maluku Utara
+            </p>
+          </div>
         </div>
       </div>
 
+      <div
+        className="mx-4 h-px"
+        style={{ background: "var(--sidebar-border)" }}
+      />
+
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 overflow-y-auto">
-        <p className="px-2 mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--sidebar-accent-foreground)]/40">
-          Menu
+        <p className="px-2 mb-2.5 text-[10px] font-bold uppercase tracking-[0.12em]"
+          style={{ color: "var(--sidebar-accent-foreground)", opacity: 0.4 }}>
+          Navigasi
         </p>
-        <ul className="space-y-1">
+        <ul className="space-y-0.5">
           {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
             <li key={id}>
               <button
-                onClick={() => {
-                  onNavChange(id);
-                }}
+                onClick={() => onNavChange(id)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group",
                   activeNav === id
-                    ? "bg-[var(--sidebar-primary)] text-white"
-                    : "text-[var(--sidebar-accent-foreground)]/70 hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)]"
+                    ? "text-white shadow-md"
+                    : "hover:text-white/90"
                 )}
+                style={
+                  activeNav === id
+                    ? { background: "var(--gradient-primary)" }
+                    : {
+                        color: "color-mix(in oklch, var(--sidebar-accent-foreground) 65%, transparent)",
+                      }
+                }
+                onMouseEnter={(e) => {
+                  if (activeNav !== id) {
+                    (e.currentTarget as HTMLButtonElement).style.background = "var(--sidebar-accent)";
+                    (e.currentTarget as HTMLButtonElement).style.color = "var(--sidebar-accent-foreground)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (activeNav !== id) {
+                    (e.currentTarget as HTMLButtonElement).style.background = "";
+                    (e.currentTarget as HTMLButtonElement).style.color = "color-mix(in oklch, var(--sidebar-accent-foreground) 65%, transparent)";
+                  }
+                }}
               >
                 <Icon className="w-4 h-4 shrink-0" />
                 {label}
+                {activeNav === id && (
+                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white/70" />
+                )}
               </button>
             </li>
           ))}
@@ -92,47 +130,72 @@ export default function Sidebar({
 
         {/* Filters */}
         <div className="mt-6">
-          <p className="px-2 mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--sidebar-accent-foreground)]/40">
-            Filter
+          <div
+            className="mx-1 h-px mb-4"
+            style={{ background: "var(--sidebar-border)" }}
+          />
+          <p className="px-2 mb-2.5 text-[10px] font-bold uppercase tracking-[0.12em]"
+            style={{ color: "var(--sidebar-accent-foreground)", opacity: 0.4 }}>
+            Filter Data
           </p>
           <div className="space-y-3 px-1">
             <div>
-              <label className="block text-xs text-[var(--sidebar-accent-foreground)]/60 mb-1.5">
+              <label
+                className="block text-[11px] font-medium mb-1.5"
+                style={{ color: "color-mix(in oklch, var(--sidebar-accent-foreground) 60%, transparent)" }}
+              >
                 Jenis Bantuan
               </label>
               <div className="relative">
                 <select
                   value={selectedBantuan}
                   onChange={(e) => onBantuanChange(e.target.value)}
-                  className="w-full appearance-none bg-[var(--sidebar-accent)] text-[var(--sidebar-accent-foreground)] text-sm rounded-lg px-3 py-2 pr-8 border border-[var(--sidebar-border)] focus:outline-none focus:ring-2 focus:ring-[var(--sidebar-primary)] cursor-pointer"
+                  className="w-full appearance-none text-sm rounded-xl px-3 py-2.5 pr-8 border focus:outline-none focus:ring-2 cursor-pointer transition-colors"
+                  style={{
+                    background: "var(--sidebar-accent)",
+                    color: "var(--sidebar-accent-foreground)",
+                    borderColor: "var(--sidebar-border)",
+                    // @ts-ignore
+                    "--tw-ring-color": "var(--sidebar-ring)",
+                  }}
                 >
                   {BANTUAN_OPTIONS.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
+                    <option key={opt} value={opt}>{opt}</option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--sidebar-accent-foreground)]/50 pointer-events-none" />
+                <ChevronDown
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none"
+                  style={{ color: "color-mix(in oklch, var(--sidebar-accent-foreground) 45%, transparent)" }}
+                />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs text-[var(--sidebar-accent-foreground)]/60 mb-1.5">
+              <label
+                className="block text-[11px] font-medium mb-1.5"
+                style={{ color: "color-mix(in oklch, var(--sidebar-accent-foreground) 60%, transparent)" }}
+              >
                 Tahun
               </label>
               <div className="relative">
                 <select
                   value={selectedTahun}
                   onChange={(e) => onTahunChange(e.target.value)}
-                  className="w-full appearance-none bg-[var(--sidebar-accent)] text-[var(--sidebar-accent-foreground)] text-sm rounded-lg px-3 py-2 pr-8 border border-[var(--sidebar-border)] focus:outline-none focus:ring-2 focus:ring-[var(--sidebar-primary)] cursor-pointer"
+                  className="w-full appearance-none text-sm rounded-xl px-3 py-2.5 pr-8 border focus:outline-none focus:ring-2 cursor-pointer transition-colors"
+                  style={{
+                    background: "var(--sidebar-accent)",
+                    color: "var(--sidebar-accent-foreground)",
+                    borderColor: "var(--sidebar-border)",
+                  }}
                 >
                   {TAHUN_OPTIONS.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
+                    <option key={opt} value={opt}>{opt}</option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--sidebar-accent-foreground)]/50 pointer-events-none" />
+                <ChevronDown
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none"
+                  style={{ color: "color-mix(in oklch, var(--sidebar-accent-foreground) 45%, transparent)" }}
+                />
               </div>
             </div>
           </div>
@@ -140,20 +203,17 @@ export default function Sidebar({
       </nav>
 
       {/* Footer */}
-      <div className="px-5 py-4 border-t border-[var(--sidebar-border)]">
-        <p className="text-xs text-[var(--sidebar-accent-foreground)]/40 text-center">
-          © 2026 Pemkot Ternate
+      <div
+        className="px-5 py-4 border-t"
+        style={{ borderColor: "var(--sidebar-border)" }}
+      >
+        <p
+          className="text-[10px] text-center"
+          style={{ color: "color-mix(in oklch, var(--sidebar-accent-foreground) 35%, transparent)" }}
+        >
+          © 2026 Pemerintah Kota Ternate
         </p>
       </div>
-    </div>
-  );
-
-  return (
-    <>
-      {/* Desktop sidebar only — mobile nav is bottom bar in page.tsx */}
-      <aside className="hidden lg:flex flex-col w-64 shrink-0 h-screen bg-[var(--sidebar)] sticky top-0">
-        {sidebarContent}
-      </aside>
-    </>
+    </aside>
   );
 }
