@@ -105,7 +105,8 @@ export default function DistributionMap({
   const selectedBantuanRef = useRef<string>(selectedBantuan);
   const selectedKecamatanRef = useRef<string | null>(null);
   const geojsonRef  = useRef<unknown>(null);
-  const tileLayerRef = useRef<any>(null);
+  const lightLayerRef = useRef<any>(null);
+  const darkLayerRef  = useRef<any>(null);
 
   const { resolvedTheme } = useTheme();
 
@@ -130,11 +131,10 @@ export default function DistributionMap({
 
   // ── Theme Tile Layer updates ───────────────────────────────
   useEffect(() => {
-    if (!tileLayerRef.current) return;
-    const tileUrl = resolvedTheme === "dark"
-      ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-      : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
-    tileLayerRef.current.setUrl(tileUrl);
+    if (!lightLayerRef.current || !darkLayerRef.current) return;
+    const isDark = resolvedTheme === "dark";
+    lightLayerRef.current.setOpacity(isDark ? 0 : 1);
+    darkLayerRef.current.setOpacity(isDark ? 1 : 0);
   }, [resolvedTheme]);
 
   // ── Init map ───────────────────────────────────────────────
@@ -149,28 +149,39 @@ export default function DistributionMap({
       if (mapInstance.current) return;
 
       const map = L.map(mapRef.current!, {
-        center: [0.7960, 127.3700],
-        zoom: 11,
+        center: [0.8083455083199472, 127.34108927032575],
+        zoom: 13,
         zoomControl: false,
+        attributionControl: false,
       });
 
-      // Zoom control — top right, away from legend
-      L.control.zoom({ position: "topright" }).addTo(map);
+      // Zoom control — bottom right
+      L.control.zoom({ position: "bottomright" }).addTo(map);
 
-      // Scale — bottom right, away from legend (legend is bottom-left)
+      // Scale — bottom right, metric only
       L.control.scale({ position: "bottomright", metric: true, imperial: false }).addTo(map);
 
-      const tileUrl = resolvedTheme === "dark"
-        ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
-
-      const tileLayer = L.tileLayer(tileUrl, {
+      const lightTileLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
         attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
         subdomains: "abcd",
         maxZoom: 20,
-      }).addTo(map);
+      });
 
-      tileLayerRef.current = tileLayer;
+      const darkTileLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+        attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
+        subdomains: "abcd",
+        maxZoom: 20,
+      });
+
+      const isDark = resolvedTheme === "dark";
+      lightTileLayer.setOpacity(isDark ? 0 : 1);
+      darkTileLayer.setOpacity(isDark ? 1 : 0);
+
+      lightTileLayer.addTo(map);
+      darkTileLayer.addTo(map);
+
+      lightLayerRef.current = lightTileLayer;
+      darkLayerRef.current  = darkTileLayer;
       mapInstance.current = map;
     };
 
@@ -341,6 +352,14 @@ export default function DistributionMap({
   return (
     <>
       <style>{`
+        /* Smooth map background and layer crossfade transitions */
+        .leaflet-container {
+          background-color: var(--background) !important;
+          transition: background-color 0.5s ease-in-out !important;
+        }
+        .leaflet-layer {
+          transition: opacity 0.5s ease-in-out !important;
+        }
         .leaflet-tooltip-custom {
           background: white;
           border: 1px solid rgba(0,0,0,0.08);
@@ -367,6 +386,7 @@ export default function DistributionMap({
         .leaflet-control-zoom {
           border: none !important;
           box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important;
+          margin-bottom: 6px !important;
         }
         .leaflet-control-zoom-in {
           border-radius: 8px 8px 0 0 !important;
@@ -374,14 +394,24 @@ export default function DistributionMap({
         .leaflet-control-zoom-out {
           border-radius: 0 0 8px 8px !important;
         }
+        /* Hide zoom control on mobile (touch devices / small screens) */
+        @media (max-width: 767px) {
+          .leaflet-control-zoom {
+            display: none !important;
+          }
+        }
         /* Scale bar */
         .leaflet-control-scale-line {
           border-color: #9ca3af !important;
           color: #6b7280 !important;
           font-size: 10px !important;
           background: rgba(255,255,255,0.85) !important;
-          border-radius: 0 0 4px 4px !important;
+          border-radius: 4px !important;
           padding: 1px 6px !important;
+        }
+        .leaflet-control-scale {
+          margin-bottom: 12px !important;
+          margin-right: 12px !important;
         }
       `}</style>
       <div

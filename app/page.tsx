@@ -375,7 +375,7 @@ export default function BansosPage() {
                   searchQuery={searchQuery}
                 />
                 {/* Legend — bottom left, above mobile nav */}
-                <div className="absolute bottom-20 left-3 z-[999] lg:bottom-4 lg:left-4">
+                <div className="absolute bottom-[72px] left-3 z-[999] lg:bottom-4 lg:left-4">
                   <MapLegend selectedBantuan={selectedBantuan} />
                 </div>
                 {/* Popup — desktop */}
@@ -472,7 +472,7 @@ export default function BansosPage() {
                         <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5">Kecamatan Ternate</p>
                       </div>
                       <div>
-                        <p className="text-2xl lg:text-3xl font-extrabold text-foreground">15.000+</p>
+                        <p className="text-2xl lg:text-3xl font-extrabold text-foreground">40.000+</p>
                         <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5">KPM Terdaftar</p>
                       </div>
                     </div>

@@ -32,7 +32,6 @@ export default function RootLayout({
           attribute="class"
           defaultTheme="light"
           enableSystem
-          disableTransitionOnChange
         >
           {children}
           {process.env.NODE_ENV === 'production' && <Analytics />}
