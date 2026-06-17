@@ -7,6 +7,7 @@ import {
   Database,
   Info,
   ChevronDown,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,7 @@ const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: BarChart2 },
   { id: "data", label: "Data", icon: Database },
   { id: "tentang", label: "Tentang", icon: Info },
+  { id: "admin", label: "Admin Panel", icon: Lock },
 ];
 
 const BANTUAN_OPTIONS = [

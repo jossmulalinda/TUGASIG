@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Download, ArrowUpDown } from "lucide-react";
+import { Search, Download, ArrowUpDown, ChevronDown, Printer } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface BansosData {
@@ -62,7 +62,7 @@ function getLevel(kpm: number, jenisBantuan: string): Level {
 
 export default function DataTable({ selectedBantuan }: { selectedBantuan: string }) {
   const [search, setSearch] = useState("");
-  const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
+  const [sortBy, setSortBy] = useState<"default" | "abjad" | "kpm_desc" | "kpm_asc">("kpm_desc");
   const [downloading, setDownloading] = useState(false);
   const [data, setData] = useState<BansosData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,16 +79,24 @@ export default function DataTable({ selectedBantuan }: { selectedBantuan: string
       .catch(err => { console.error("Error fetching data:", err); setLoading(false); });
   }, [selectedBantuan]);
 
-  const filtered = data
-    .filter(k =>
+  const getFilteredAndSorted = () => {
+    const list = data.filter(k =>
       k.kecamatan.toLowerCase().includes(search.toLowerCase()) ||
       k.jenis_bantuan.toLowerCase().includes(search.toLowerCase())
-    )
-    .sort((a, b) =>
-      sortDir === "desc"
-        ? b.jumlah_kpm - a.jumlah_kpm
-        : a.jumlah_kpm - b.jumlah_kpm
     );
+    if (sortBy === "abjad") {
+      return list.sort((a, b) => a.kecamatan.localeCompare(b.kecamatan));
+    }
+    if (sortBy === "kpm_desc") {
+      return list.sort((a, b) => b.jumlah_kpm - a.jumlah_kpm);
+    }
+    if (sortBy === "kpm_asc") {
+      return list.sort((a, b) => a.jumlah_kpm - b.jumlah_kpm);
+    }
+    return list;
+  };
+
+  const filtered = getFilteredAndSorted();
 
   const totalKpm = filtered.reduce((s, k) => s + k.jumlah_kpm, 0);
 
@@ -123,17 +131,29 @@ export default function DataTable({ selectedBantuan }: { selectedBantuan: string
             <h3 className="font-semibold text-sm text-foreground">Data Distribusi per Kecamatan</h3>
             <p className="text-[11px] text-muted-foreground mt-0.5">Tahun 2026 · {selectedBantuan}</p>
           </div>
-          <button
-            onClick={handleDownloadExcel}
-            disabled={downloading}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-xl gradient-bg text-white hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed transition-opacity font-semibold shrink-0 shadow-sm"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{downloading ? "Mengunduh..." : "Unduh Excel"}</span>
-            <span className="sm:hidden">{downloading ? "..." : "Excel"}</span>
-          </button>
+          <div className="flex items-center gap-1.5 shrink-0 no-print">
+            {/* Download Excel */}
+            <button
+              onClick={handleDownloadExcel}
+              disabled={downloading}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-xl gradient-bg text-white hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed transition-opacity font-semibold shadow-sm cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{downloading ? "Mengunduh..." : "Excel"}</span>
+              <span className="sm:hidden">{downloading ? "..." : "Excel"}</span>
+            </button>
+            {/* Print PDF */}
+            <button
+              onClick={() => window.print()}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-xl border border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground transition-colors font-semibold shadow-sm cursor-pointer"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Cetak PDF</span>
+              <span className="sm:hidden">PDF</span>
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 no-print">
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <input
@@ -144,16 +164,20 @@ export default function DataTable({ selectedBantuan }: { selectedBantuan: string
               className="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring transition-shadow"
             />
           </div>
-          <button
-            onClick={() => setSortDir(d => d === "desc" ? "asc" : "desc")}
-            className="flex items-center gap-1 px-2.5 py-2 text-xs rounded-xl border border-border bg-background hover:bg-muted transition-colors shrink-0"
-            title={`Urut ${sortDir === "desc" ? "naik" : "turun"}`}
-          >
-            <ArrowUpDown className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline text-muted-foreground">
-              {sortDir === "desc" ? "Terbanyak" : "Tersedikit"}
-            </span>
-          </button>
+          {/* Sort Selector */}
+          <div className="relative shrink-0">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="appearance-none text-xs rounded-xl px-3 py-2 pr-8 border border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground font-semibold cursor-pointer transition-colors"
+            >
+              <option value="default">Default</option>
+              <option value="abjad">Abjad (A-Z)</option>
+              <option value="kpm_desc">KPM Terbanyak</option>
+              <option value="kpm_asc">KPM Terkecil</option>
+            </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none text-muted-foreground" />
+          </div>
         </div>
       </div>
 
@@ -263,7 +287,7 @@ export default function DataTable({ selectedBantuan }: { selectedBantuan: string
         </>
       )}
 
-      <div className="px-4 py-2.5 border-t border-border bg-muted/20">
+      <div className="px-4 py-2.5 border-t border-border bg-muted/20 no-print">
         <p className="text-[11px] text-muted-foreground">
           Menampilkan <span className="font-semibold text-foreground">{filtered.length}</span> dari{" "}
           <span className="font-semibold text-foreground">{data.length}</span> data

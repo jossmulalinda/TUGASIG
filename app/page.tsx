@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import * as XLSX from "xlsx";
+import { Toaster, toast } from "sonner";
 import dynamic from "next/dynamic";
 import { useTheme } from "next-themes";
 import Sidebar from "@/components/sidebar";
@@ -26,6 +28,12 @@ import {
   FileDown,
   SlidersHorizontal,
   Check,
+  Lock,
+  Trash2,
+  Edit,
+  Plus,
+  Upload,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -43,7 +51,7 @@ const DistributionMap = dynamic(() => import("@/components/distribution-map"), {
   ),
 });
 
-type View = "peta" | "dashboard" | "data" | "home" | "tentang";
+type View = "peta" | "dashboard" | "data" | "home" | "tentang" | "admin";
 
 const BOTTOM_NAV = [
   { id: "home",      label: "Home",      icon: Home },
@@ -51,6 +59,7 @@ const BOTTOM_NAV = [
   { id: "dashboard", label: "Statistik", icon: BarChart2 },
   { id: "data",      label: "Data",      icon: Database },
   { id: "tentang",   label: "Tentang",   icon: Info },
+  { id: "admin",     label: "Admin",     icon: Lock },
 ];
 
 const VIEW_TITLES: Record<View, string> = {
@@ -59,6 +68,7 @@ const VIEW_TITLES: Record<View, string> = {
   data:      "Data Distribusi",
   home:      "Beranda",
   tentang:   "Tentang Sistem",
+  admin:     "Panel Admin",
 };
 
 const BANTUAN_OPTIONS = ["Semua Jenis", "Sembako/BPNT", "PKH", "PBI JK"];
@@ -261,6 +271,36 @@ export default function BansosPage() {
     if (showSearch) searchRef.current?.focus();
   }, [showSearch]);
 
+  // Network connection monitoring
+  useEffect(() => {
+    const handleOnline = () => {
+      toast.success("Koneksi terhubung kembali. Anda sedang online.", {
+        id: "network-status",
+        duration: 4000,
+      });
+    };
+
+    const handleOffline = () => {
+      toast.error("Koneksi terputus. Anda sedang offline.", {
+        id: "network-status",
+        duration: Infinity,
+      });
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    // Initial check on mount
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      handleOffline();
+    }
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSearchQuery(searchInput);
@@ -272,6 +312,7 @@ export default function BansosPage() {
 
   return (
     <div className="flex h-[100dvh] w-screen overflow-hidden bg-background">
+      <Toaster position="top-center" richColors />
       <Sidebar
         activeNav={activeNav}
         onNavChange={(id) => setActiveNav(id as View)}
@@ -412,6 +453,10 @@ export default function BansosPage() {
                   <DistributionBarChart selectedBantuan={selectedBantuan} />
                   <KecamatanDonut selectedBantuan={selectedBantuan} />
                 </div>
+                {/* Print-only Data Table (Excel data content inside PDF) */}
+                <div className="print-only mt-6">
+                  <DataTable selectedBantuan={selectedBantuan} />
+                </div>
               </div>
             ) : (
               <ComingSoon label={`Data Tahun ${selectedTahun}`} onBack={() => setSelectedTahun("2026")} />
@@ -527,7 +572,7 @@ export default function BansosPage() {
                       <h2 className="text-base font-bold text-foreground leading-tight">Bansos Ternate</h2>
                       <p className="text-xs text-muted-foreground mt-0.5">Sistem Informasi Geografis Distribusi Bantuan Sosial</p>
                       <div className="flex items-center gap-1.5 mt-2">
-                        <span className="text-[10px] px-2 py-0.5 rounded-full gradient-bg text-white font-semibold">v1.0.0</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full gradient-bg text-white font-semibold">v1.0.2</span>
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold">Live</span>
                       </div>
                     </div>
@@ -578,6 +623,11 @@ export default function BansosPage() {
               </div>
             </div>
           )}
+
+          {/* ── Admin View ───────────────────────────────── */}
+          {activeNav === "admin" && (
+            <AdminPanel />
+          )}
         </div>
 
         {/* ── Mobile bottom nav ────────────────────────── */}
@@ -614,10 +664,34 @@ export default function BansosPage() {
 
       {/* Print styles */}
       <style>{`
+        @media screen {
+          .print-only { display: none !important; }
+        }
         @media print {
-          .lg\\:hidden, nav, header, aside { display: none !important; }
+          .lg\\:hidden, nav, header, aside, .no-print { display: none !important; }
           #dashboard-print { padding: 0 !important; }
-          body { background: white !important; }
+          body { background: white !important; color: black !important; }
+          html, body, main, .flex-1, .overflow-auto, .overflow-hidden, div {
+            height: auto !important;
+            overflow: visible !important;
+            position: static !important;
+          }
+          table {
+            page-break-inside: auto;
+          }
+          tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+          }
+          thead {
+            display: table-header-group;
+          }
+          tfoot {
+            display: table-row-group;
+          }
+          .print-only {
+            display: block !important;
+          }
         }
       `}</style>
     </div>
@@ -709,6 +783,814 @@ function KecamatanDonut({ selectedBantuan }: { selectedBantuan: string }) {
             <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11 }} />
           </PieChart>
         </ResponsiveContainer>
+      )}
+    </div>
+  );
+}
+
+// ── Admin Panel Component ─────────────────────────────────
+function AdminPanel() {
+  const [token, setToken] = useState<string | null>(null);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginErrors, setLoginErrors] = useState<{ username?: string; password?: string }>({});
+  
+  // Data State
+  const [dataList, setDataList] = useState<any[]>([]);
+  const [kecamatanList, setKecamatanList] = useState<any[]>([]);
+  const [jenisBantuanList, setJenisBantuanList] = useState<any[]>([]);
+  const [dataLoading, setDataLoading] = useState(false);
+  const [sortBy, setSortBy] = useState<"default" | "abjad" | "kpm_desc" | "kpm_asc">("default");
+
+  // Form Modal State
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [formType, setFormType] = useState<"add" | "edit">("add");
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [formKecamatanId, setFormKecamatanId] = useState("");
+  const [formJenisBantuanId, setFormJenisBantuanId] = useState("");
+  const [formJumlahKpm, setFormJumlahKpm] = useState("");
+  const [formTahun, setFormTahun] = useState("2026");
+
+  // Excel State
+  const [excelLoading, setExcelLoading] = useState(false);
+
+  // Delete Modal State
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deleteData, setDeleteData] = useState<any>(null);
+  const [confirmKecamatanName, setConfirmKecamatanName] = useState("");
+  const [isEditConfirmOpen, setIsEditConfirmOpen] = useState(false);
+  const [editPayload, setEditPayload] = useState<any>(null);
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+
+  // Check login on mount
+  useEffect(() => {
+    const savedToken = localStorage.getItem("admin_token");
+    if (savedToken) {
+      setToken(savedToken);
+      fetchData(savedToken);
+    }
+  }, []);
+
+  const fetchData = async (authToken: string) => {
+    setDataLoading(true);
+    try {
+      const resBansos = await fetch(`${API_URL}/api/bansos`);
+      if (resBansos.ok) {
+        const data = await resBansos.json();
+        setDataList(data);
+      }
+      
+      const resKec = await fetch(`${API_URL}/api/kecamatan`);
+      if (resKec.ok) {
+        const data = await resKec.json();
+        setKecamatanList(data);
+      }
+
+      const resBantuan = await fetch(`${API_URL}/api/jenis-bantuan`);
+      if (resBantuan.ok) {
+        const data = await resBantuan.json();
+        setJenisBantuanList(data);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Gagal mengambil data dari server");
+    } finally {
+      setDataLoading(false);
+    }
+  };
+
+  const getSortedData = () => {
+    const list = [...dataList];
+    if (sortBy === "abjad") {
+      return list.sort((a, b) => a.kecamatan.localeCompare(b.kecamatan));
+    }
+    if (sortBy === "kpm_desc") {
+      return list.sort((a, b) => b.jumlah_kpm - a.jumlah_kpm);
+    }
+    if (sortBy === "kpm_asc") {
+      return list.sort((a, b) => a.jumlah_kpm - b.jumlah_kpm);
+    }
+    return list;
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const errors: { username?: string; password?: string } = {};
+    if (!username.trim()) {
+      errors.username = "Username tidak boleh kosong";
+    }
+    if (!password.trim()) {
+      errors.password = "Password tidak boleh kosong";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setLoginErrors(errors);
+      return;
+    }
+
+    setLoginErrors({});
+    setLoginLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/admin/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem("admin_token", data.token);
+        setToken(data.token);
+        fetchData(data.token);
+        toast.success("Login sukses, selamat datang Admin!");
+      } else {
+        toast.error(data.error || "Gagal login");
+      }
+    } catch (err) {
+      toast.error("Koneksi gagal ke server");
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("admin_token");
+    setToken(null);
+    setDataList([]);
+    setUsername("");
+    setPassword("");
+    setLoginErrors({});
+    toast.success("Anda berhasil keluar dari panel admin");
+  };
+
+  const openAddForm = () => {
+    setFormType("add");
+    setFormKecamatanId(kecamatanList[0]?.id?.toString() || "");
+    setFormJenisBantuanId(jenisBantuanList[0]?.id?.toString() || "");
+    setFormJumlahKpm("");
+    setFormTahun("2026");
+    setIsFormOpen(true);
+  };
+
+  const openEditForm = (item: any) => {
+    setFormType("edit");
+    setSelectedId(item.id);
+    setFormKecamatanId(item.kecamatan_id?.toString() || "");
+    setFormJenisBantuanId(item.jenis_bantuan_id?.toString() || "");
+    setFormJumlahKpm(item.jumlah_kpm?.toString() || "");
+    setFormTahun(item.tahun?.toString() || "2026");
+    setIsFormOpen(true);
+  };
+
+  const submitForm = async (payload: any, method: string, url: string) => {
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.status === 401) {
+        toast.error("Sesi Anda telah berakhir. Silakan login kembali.");
+        handleLogout();
+        return;
+      }
+
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(method === "POST" ? "Data berhasil ditambahkan" : "Data berhasil diperbarui");
+        setIsFormOpen(false);
+        setIsEditConfirmOpen(false);
+        fetchData(token!);
+      } else {
+        toast.error(data.error || "Gagal menyimpan data");
+      }
+    } catch (err) {
+      toast.error("Gagal terhubung ke server");
+    }
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formKecamatanId || !formJenisBantuanId || !formJumlahKpm || !formTahun) {
+      toast.error("Semua kolom wajib diisi");
+      return;
+    }
+
+    const payload = {
+      kecamatan_id: parseInt(formKecamatanId),
+      jenis_bantuan_id: parseInt(formJenisBantuanId),
+      jumlah_kpm: parseInt(formJumlahKpm),
+      tahun: parseInt(formTahun),
+    };
+
+    const url = formType === "add" 
+      ? `${API_URL}/api/bansos` 
+      : `${API_URL}/api/bansos/${selectedId}`;
+    
+    const method = formType === "add" ? "POST" : "PUT";
+
+    if (formType === "edit") {
+      setEditPayload({ payload, url, method });
+      setIsEditConfirmOpen(true);
+    } else {
+      submitForm(payload, method, url);
+    }
+  };
+
+  const openDeleteModal = (item: any) => {
+    setDeleteData(item);
+    setConfirmKecamatanName("");
+    setIsDeleteOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteData) return;
+    if (confirmKecamatanName.trim().toLowerCase() !== deleteData.kecamatan.trim().toLowerCase()) {
+      toast.error("Nama kecamatan tidak sesuai");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/api/bansos/${deleteData.id}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+
+      if (res.status === 401) {
+        toast.error("Sesi Anda telah berakhir. Silakan login kembali.");
+        handleLogout();
+        return;
+      }
+
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Data berhasil dihapus");
+        setIsDeleteOpen(false);
+        fetchData(token!);
+      } else {
+        toast.error(data.error || "Gagal menghapus data");
+      }
+    } catch (err) {
+      toast.error("Gagal terhubung ke server");
+    }
+  };
+
+  const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setExcelLoading(true);
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const bstr = event.target?.result;
+        const workbook = XLSX.read(bstr, { type: "binary" });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const json: any[] = XLSX.utils.sheet_to_json(worksheet);
+
+        if (json.length === 0) {
+          toast.error("Berkas Excel kosong atau format tidak valid");
+          setExcelLoading(false);
+          return;
+        }
+
+        // Mapping helpers
+        const kecMap: Record<string, number> = {};
+        kecamatanList.forEach((k) => {
+          kecMap[k.name.trim().toLowerCase()] = k.id;
+        });
+
+        const banMap: Record<string, number> = {};
+        jenisBantuanList.forEach((b) => {
+          banMap[b.name.trim().toLowerCase()] = b.id;
+        });
+
+        const batchData: any[] = [];
+        let skippedRows = 0;
+
+        json.forEach((row, idx) => {
+          const rowKec = row["Kecamatan"] || row["kecamatan"] || "";
+          const rowBantuan = row["Jenis Bantuan"] || row["jenis_bantuan"] || row["Program"] || row["program"] || "";
+          const rowKpm = row["Jumlah KPM"] || row["jumlah_kpm"] || row["KPM"] || row["kpm"] || 0;
+          const rowTahun = row["Tahun"] || row["tahun"] || 2026;
+
+          const kecId = kecMap[rowKec.toString().trim().toLowerCase()];
+          const banId = banMap[rowBantuan.toString().trim().toLowerCase()];
+
+          if (kecId && banId && rowKpm && rowTahun) {
+            batchData.push({
+              kecamatan_id: kecId,
+              jenis_bantuan_id: banId,
+              jumlah_kpm: parseInt(rowKpm),
+              tahun: parseInt(rowTahun),
+            });
+          } else {
+            skippedRows++;
+          }
+        });
+
+        if (batchData.length === 0) {
+          toast.error("Tidak ada baris data valid yang cocok dengan Kecamatan & Jenis Bantuan di database");
+          setExcelLoading(false);
+          return;
+        }
+
+        const res = await fetch(`${API_URL}/api/bansos/batch`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+          body: JSON.stringify(batchData),
+        });
+
+        if (res.status === 401) {
+          toast.error("Sesi Anda telah berakhir. Silakan login kembali.");
+          handleLogout();
+          setExcelLoading(false);
+          return;
+        }
+
+        const data = await res.json();
+        if (res.ok) {
+          toast.success(
+            `Excel berhasil diunggah! ${data.inserted} ditambahkan, ${data.updated} diperbarui.${
+              skippedRows > 0 ? ` (${skippedRows} baris diabaikan karena format tidak valid)` : ""
+            }`
+          );
+          fetchData(token!);
+        } else {
+          toast.error(data.error || "Gagal mengunggah data batch");
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Gagal mengurai file Excel. Pastikan format kolom sesuai.");
+      } finally {
+        setExcelLoading(false);
+      }
+    };
+    reader.readAsBinaryString(file);
+    e.target.value = "";
+  };
+
+  if (!token) {
+    return (
+      <div className="relative w-full min-h-[85vh] flex items-center justify-center p-4 md:p-6 overflow-hidden bg-gradient-to-br from-background via-muted/30 to-background dark:from-background dark:via-muted/10 dark:to-background animate-fade-in">
+        {/* Decorative background circles */}
+        <div className="absolute top-0 right-0 w-80 h-80 rounded-full opacity-[0.08] pointer-events-none" style={{ background: "var(--gradient-primary)", transform: "translate(30%, -30%)" }} />
+        <div className="absolute bottom-0 left-0 w-72 h-72 rounded-full opacity-[0.08] pointer-events-none" style={{ background: "var(--gradient-primary)", transform: "translate(-30%, 30%)" }} />
+
+        <div className="relative w-full max-w-[450px] bg-card/85 backdrop-blur-md rounded-[20px] border border-border p-8 shadow-lg overflow-hidden flex flex-col gap-2">
+          <div className="absolute inset-x-0 top-0 h-1 gradient-bg" />
+          
+          <div className="flex flex-col items-center text-center space-y-2 mb-4">
+            <div className="w-12 h-12 rounded-xl gradient-bg flex items-center justify-center text-white shadow-md animate-fade-in">
+              <Lock className="w-5 h-5" />
+            </div>
+            <h2 className="text-lg font-bold text-foreground">Login Admin</h2>
+            <p className="text-xs text-muted-foreground">Masuk untuk mengelola data bantuan sosial</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+            {/* Username Field */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-foreground font-semibold text-sm">Username</label>
+              <div className={cn(
+                "border rounded-xl h-[50px] flex items-center pl-3.5 bg-background/50 transition-all duration-200",
+                loginErrors.username
+                  ? "border-red-500/50 focus-within:border-red-500"
+                  : "border-border focus-within:border-primary"
+              )}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width={20}
+                  viewBox="0 0 24 24"
+                  height={20}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-muted-foreground shrink-0"
+                >
+                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    if (loginErrors.username) {
+                      setLoginErrors((prev) => ({ ...prev, username: undefined }));
+                    }
+                  }}
+                  placeholder="Enter your Username"
+                  className="ml-2.5 bg-transparent border-none outline-none w-full h-full text-foreground text-sm focus:ring-0 focus:outline-none"
+                />
+              </div>
+              {loginErrors.username && (
+                <span className="text-[11px] text-red-500 font-semibold ml-1 animate-slide-up">
+                  {loginErrors.username}
+                </span>
+              )}
+            </div>
+
+            {/* Password Field */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-foreground font-semibold text-sm">Password</label>
+              <div className={cn(
+                "border rounded-xl h-[50px] flex items-center pl-3.5 bg-background/50 transition-all duration-200",
+                loginErrors.password
+                  ? "border-red-500/50 focus-within:border-red-500"
+                  : "border-border focus-within:border-primary"
+              )}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width={20}
+                  viewBox="-64 0 512 512"
+                  height={20}
+                  fill="currentColor"
+                  className="text-muted-foreground shrink-0"
+                >
+                  <path d="m336 512h-288c-26.453125 0-48-21.523438-48-48v-224c0-26.476562 21.546875-48 48-48h288c26.453125 0 48 21.523438 48 48v224c0 26.476562-21.546875 48-48 48zm-288-288c-8.8125 0-16 7.167969-16 16v224c0 8.832031 7.1875 16 16 16h288c8.8125 0 16-7.167969 16-16v-224c0-8.832031-7.1875-16-16-16zm0 0" />
+                  <path d="m304 224c-8.832031 0-16-7.167969-16-16v-80c0-52.929688-43.070312-96-96-96s-96 43.070312-96 96v80c0 8.832031-7.167969 16-16 16s-16-7.167969-16-16v-80c0-70.59375 57.40625-128 128-128s128 57.40625 128 128v80c0 8.832031-7.167969 16-16 16zm0 0" />
+                </svg>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (loginErrors.password) {
+                      setLoginErrors((prev) => ({ ...prev, password: undefined }));
+                    }
+                  }}
+                  placeholder="Enter your Password"
+                  className="ml-2.5 bg-transparent border-none outline-none w-full h-full text-foreground text-sm focus:ring-0 focus:outline-none"
+                />
+              </div>
+              {loginErrors.password && (
+                <span className="text-[11px] text-red-500 font-semibold ml-1 animate-slide-up">
+                  {loginErrors.password}
+                </span>
+              )}
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loginLoading}
+              className="mt-2 button-name px-6 self-center flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              style={{ height: "38px" }}
+            >
+              {loginLoading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
+              <span>Sign In</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4 md:p-6 space-y-4 animate-fade-in pb-16">
+      {/* Controls Card */}
+      <div className="bg-card rounded-2xl border border-border p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="font-bold text-base text-foreground">Kelola Data Bansos</h2>
+          <p className="text-xs text-muted-foreground">Total: {dataList.length} record terdaftar</p>
+        </div>
+        
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Sort Selector */}
+          <div className="relative shrink-0">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="appearance-none text-xs rounded-lg px-3 py-1.5 pr-8 border border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground font-semibold cursor-pointer transition-colors"
+            >
+              <option value="default">Urutkan: Default</option>
+              <option value="abjad">Urutkan: Abjad (A-Z)</option>
+              <option value="kpm_desc">Urutkan: KPM Terbanyak</option>
+              <option value="kpm_asc">Urutkan: KPM Terkecil</option>
+            </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none text-muted-foreground" />
+          </div>
+
+          {/* Tambah Data Button */}
+          <button
+            onClick={openAddForm}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg gradient-bg text-white hover:opacity-90 transition-opacity text-xs font-semibold shadow cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Tambah Data</span>
+          </button>
+
+          {/* Import Excel */}
+          <input
+            type="file"
+            accept=".xlsx, .csv"
+            onChange={handleExcelUpload}
+            className="hidden"
+            id="excel-upload-input"
+            disabled={excelLoading}
+          />
+          <label
+            htmlFor="excel-upload-input"
+            className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground text-xs font-semibold transition-colors disabled:opacity-50"
+          >
+            {excelLoading ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Upload className="w-3.5 h-3.5" />
+            )}
+            <span>Unggah Excel</span>
+          </label>
+
+          {/* Logout Button */}
+          <button
+            onClick={handleLogout}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-500/30 bg-red-500/5 hover:bg-red-500/10 text-red-500 text-xs font-semibold transition-colors ml-auto sm:ml-0 cursor-pointer"
+          >
+            <span>Keluar</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Main Table */}
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+        {dataLoading ? (
+          <div className="p-8 flex flex-col items-center justify-center gap-2 text-muted-foreground">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <span className="text-xs">Memuat data kelola...</span>
+          </div>
+        ) : dataList.length === 0 ? (
+          <div className="p-8 text-center text-xs text-muted-foreground">
+            Belum ada data bansos tersimpan di database.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-border text-left">
+              <thead className="bg-muted/40 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border">
+                <tr>
+                  <th className="px-4 py-3 text-center w-12">No</th>
+                  <th className="px-4 py-3">Kecamatan</th>
+                  <th className="px-4 py-3">Program Bantuan</th>
+                  <th className="px-4 py-3 text-right">Jumlah KPM</th>
+                  <th className="px-4 py-3 text-center">Tahun</th>
+                  <th className="px-4 py-3 text-center w-24">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/60 text-xs text-foreground">
+                {getSortedData().map((item, idx) => (
+                  <tr key={item.id} className="hover:bg-muted/10 transition-colors">
+                    <td className="px-4 py-3 text-center text-muted-foreground">{idx + 1}</td>
+                    <td className="px-4 py-3 font-semibold">{item.kecamatan}</td>
+                    <td className="px-4 py-3">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary/10 text-primary">
+                        {item.jenis_bantuan}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right font-mono font-semibold">
+                      {item.jumlah_kpm.toLocaleString("id-ID")}
+                    </td>
+                    <td className="px-4 py-3 text-center font-medium">{item.tahun}</td>
+                    <td className="px-4 py-3 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => openEditForm(item)}
+                          title="Edit data"
+                          className="w-7 h-7 flex items-center justify-center rounded-lg border border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => openDeleteModal(item)}
+                          title="Hapus data"
+                          className="w-7 h-7 flex items-center justify-center rounded-lg border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-red-500 transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* ── ADD/EDIT FORM MODAL ── */}
+      {isFormOpen && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-card rounded-2xl border border-border shadow-xl w-full max-w-sm overflow-hidden relative">
+            <div className="absolute inset-x-0 top-0 h-1 gradient-bg" />
+            <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+              <h3 className="font-bold text-sm text-foreground">
+                {formType === "add" ? "Tambah Data Bansos" : "Edit Data Bansos"}
+              </h3>
+              <button
+                onClick={() => setIsFormOpen(false)}
+                className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleFormSubmit} className="p-5 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1">Kecamatan</label>
+                <div className="relative">
+                  <select
+                    value={formKecamatanId}
+                    onChange={(e) => setFormKecamatanId(e.target.value)}
+                    className="w-full text-xs px-3 py-2.5 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring text-foreground cursor-pointer appearance-none pr-8"
+                  >
+                    {kecamatanList.map((k) => (
+                      <option key={k.id} value={k.id}>{k.name}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none text-muted-foreground" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1">Program Bantuan</label>
+                <div className="relative">
+                  <select
+                    value={formJenisBantuanId}
+                    onChange={(e) => setFormJenisBantuanId(e.target.value)}
+                    className="w-full text-xs px-3 py-2.5 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring text-foreground cursor-pointer appearance-none pr-8"
+                  >
+                    {jenisBantuanList.map((b) => (
+                      <option key={b.id} value={b.id}>{b.name}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none text-muted-foreground" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1">Jumlah KPM</label>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  value={formJumlahKpm}
+                  onChange={(e) => setFormJumlahKpm(e.target.value)}
+                  placeholder="Contoh: 350"
+                  className="w-full text-xs px-3 py-2.5 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring text-foreground"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1">Tahun</label>
+                <div className="relative">
+                  <select
+                    value={formTahun}
+                    onChange={(e) => setFormTahun(e.target.value)}
+                    className="w-full text-xs px-3 py-2.5 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring text-foreground cursor-pointer appearance-none pr-8"
+                  >
+                    <option value="2026">2026</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                    <option value="2022">2022</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none text-muted-foreground" />
+                </div>
+              </div>
+
+              <div className="flex gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsFormOpen(false)}
+                  className="flex-1 button-name flex items-center justify-center cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 button-name flex items-center justify-center cursor-pointer"
+                  style={{ background: "var(--gradient-primary)", color: "white", borderWidth: 0 }}
+                >
+                  Simpan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── DELETE CONFIRMATION MODAL ── */}
+      {isDeleteOpen && deleteData && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-card rounded-2xl border border-border shadow-xl w-full max-w-sm overflow-hidden relative">
+            <div className="absolute inset-x-0 top-0 h-1 bg-red-500" />
+            <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+              <h3 className="font-bold text-sm text-red-500">Konfirmasi Hapus</h3>
+              <button
+                onClick={() => setIsDeleteOpen(false)}
+                className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Anda akan menghapus data KPM Kecamatan <strong className="text-foreground">{deleteData.kecamatan}</strong>, program <strong className="text-foreground">{deleteData.jenis_bantuan}</strong> tahun <strong className="text-foreground">{deleteData.tahun}</strong>. Tindakan ini tidak dapat dibatalkan.
+              </p>
+
+              <div className="bg-muted/40 p-3 rounded-xl border border-border">
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Untuk mengonfirmasi penghapusan, ketik kembali nama kecamatan di bawah:
+                </p>
+                <p className="text-xs font-bold text-foreground mt-1 select-none">
+                  &quot;{deleteData.kecamatan}&quot;
+                </p>
+              </div>
+
+              <div>
+                <input
+                  type="text"
+                  value={confirmKecamatanName}
+                  onChange={(e) => setConfirmKecamatanName(e.target.value)}
+                  placeholder="Ketik nama kecamatan di sini..."
+                  className="w-full text-xs px-3 py-2.5 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring text-foreground"
+                />
+              </div>
+
+              <div className="flex gap-2.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setIsDeleteOpen(false)}
+                  className="flex-1 button-name flex items-center justify-center cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleDeleteConfirm}
+                  disabled={confirmKecamatanName.trim().toLowerCase() !== deleteData.kecamatan.trim().toLowerCase()}
+                  className="flex-1 button-name flex items-center justify-center cursor-pointer disabled:opacity-40"
+                  style={{ backgroundColor: "rgb(239, 68, 68)", color: "white", borderWidth: 0 }}
+                >
+                  Hapus Permanen
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ── EDIT CONFIRMATION MODAL ── */}
+      {isEditConfirmOpen && editPayload && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-card rounded-2xl border border-border shadow-xl w-full max-w-sm overflow-hidden relative">
+            <div className="absolute inset-x-0 top-0 h-1 gradient-bg" />
+            <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+              <h3 className="font-bold text-sm text-foreground">Konfirmasi Perubahan</h3>
+              <button
+                onClick={() => setIsEditConfirmOpen(false)}
+                className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Apakah Anda yakin ingin menyimpan perubahan pada data bantuan sosial ini? Tindakan ini akan memperbarui data KPM yang terdaftar di database.
+              </p>
+
+              <div className="flex gap-2.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setIsEditConfirmOpen(false)}
+                  className="flex-1 button-name flex items-center justify-center cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={() => submitForm(editPayload.payload, editPayload.method, editPayload.url)}
+                  className="flex-1 button-name flex items-center justify-center cursor-pointer"
+                  style={{ background: "var(--gradient-primary)", color: "white", borderWidth: 0 }}
+                >
+                  Yakin, Simpan
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
